@@ -3,8 +3,8 @@
 // Tema Claro (o que já temos, renomeado)
 export const lightTheme = {
   colors: {
-    primary: '#6C63FF', // um roxo suave
-    primaryLight: '#8A84FF',
+    primary: '#21a7ea', // um roxo mais claro para contraste
+    primaryLight: '#30aceb',
     secondary: '#FFC107', // amarelo
     background: '#F5F7FA', // cinza claro para o fundo
     surface: '#FFFFFF', // branco para cartões e elementos principais
@@ -35,8 +35,8 @@ export const lightTheme = {
 // Tema Escuro (NOVO)
 export const darkTheme = {
   colors: {
-    primary: '#BB86FC', // um roxo mais claro para contraste
-    primaryLight: '#D1BBFF',
+    primary: '#21a7ea', // um roxo mais claro para contraste
+    primaryLight: '#30aceb',
     secondary: '#FFEB3B', // amarelo para contraste
     background: '#121212', // Fundo bem escuro
     surface: '#1E1E1E', // Superfície de cartões, um pouco mais clara que o fundo
@@ -66,4 +66,4 @@ export const darkTheme = {
 
 export const theme = { ...darkTheme };
 
-export type Theme = typeof lightTheme; // O tipo pode ser baseado em qualquer um dos temas
+export type Theme = typeof lightTheme | typeof darkTheme; // O tipo pode ser baseado em qualquer um dos temas

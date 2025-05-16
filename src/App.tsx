@@ -22,7 +22,7 @@ const ThemeToggleButton = styled.button`
   }
 `;
 
-function AppContent() {
+const AppContent: React.FC = () => {
   const { themeName, toggleTheme } = useTheme();
 
   return (
@@ -35,7 +35,7 @@ function AppContent() {
   );
 }
 
-function App() {
+const App: React.FC = () => {
   return (
     <ThemeProvider> {/* Use o nosso ThemeProvider aqui */}
       <AppContent />
