@@ -5,6 +5,7 @@ import MiniCalendar from './MiniCalendar';
 import UpcomingTasks from './UpcomingTasks';
 import { theme } from '../../styles/theme';
 import type { Task } from '../../types';
+import DailyTasks from './DailyTasks';
 
 interface RightSidebarProps {
   currentDate: Date;
@@ -49,6 +50,14 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, 
   return (
     <SidebarContainer>
       <MiniCalendar currentDate={currentDate} onDateClick={onDateChange} selectedDate={selectedDate} />
+      <DailyTasks onTaskClik={onTaskClick} tasks={tasks.filter(task => {
+          const aux = new Date(currentDate.toISOString());
+          aux.setHours(0);
+          aux.setMinutes(0);
+          aux.setSeconds(0);
+          aux.setMilliseconds(0);
+          return task.date.toISOString() === aux.toISOString();
+      })}/>
       <UpcomingTasks onTaskClik={onTaskClick} tasks={tasks} />
     </SidebarContainer>
   );

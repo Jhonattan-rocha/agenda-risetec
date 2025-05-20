@@ -101,7 +101,7 @@ const Calendar: React.FC = () => {
     setInitialDateForNewTask(date);
     setTaskToEdit(null);
     setIsTaskModalOpen(true);
-  }, []);
+  }, [handleDateClick]);
 
   // Abre o modal para editar uma tarefa existente
   const handleOpenEditTaskModal = useCallback((task: Task) => {
