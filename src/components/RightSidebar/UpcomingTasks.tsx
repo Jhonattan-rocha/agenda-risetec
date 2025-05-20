@@ -9,6 +9,7 @@ import { theme } from '../../styles/theme';
 
 interface UpcomingTasksProps {
   tasks: Task[];
+  onTaskClik: (task: Task) => void;
 }
 
 const UpcomingTasksContainer = styled(Card)`
@@ -30,6 +31,8 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
   align-items: center;
   padding: ${theme.spacing.sm} 0;
   border-bottom: 1px dashed ${theme.colors.border};
+  cursor: pointer;
+  
   &:last-child {
     border-bottom: none;
   }
@@ -63,7 +66,7 @@ const NoTasksMessage = styled.p`
   padding: ${theme.spacing.md} 0;
 `;
 
-const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks }) => {
+const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
   const sortedTasks = tasks
     .filter(task => isFuture(task.date) || isToday(task.date))
     .sort((a, b) => a.date.getTime() - b.date.getTime());
@@ -74,7 +77,11 @@ const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks }) => {
       {sortedTasks.length > 0 ? (
         <div className="task-list">
           {sortedTasks.map(task => (
-            <TaskItemWrapper key={task.id} $color={task.color}>
+            <TaskItemWrapper key={task.id} $color={task.color} onClick={(e) => {
+              e.stopPropagation();
+              e.preventDefault();
+              onTaskClik?.(task);
+            }}>
               <div className="color-dot" />
               <div className="task-details">
                 <h4>{task.title}</h4>

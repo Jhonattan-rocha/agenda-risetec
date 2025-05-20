@@ -11,6 +11,7 @@ interface RightSidebarProps {
   onDateChange: (date: Date) => void;
   selectedDate: Date;
   tasks: Task[];
+  onTaskClick: (task: Task) => void;
 }
 
 const SidebarContainer = styled.aside`
@@ -44,11 +45,11 @@ const SidebarContainer = styled.aside`
   }
 `;
 
-const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, selectedDate, tasks }) => {
+const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, selectedDate, tasks, onTaskClick }) => {
   return (
     <SidebarContainer>
       <MiniCalendar currentDate={currentDate} onDateClick={onDateChange} selectedDate={selectedDate} />
-      <UpcomingTasks tasks={tasks} />
+      <UpcomingTasks onTaskClik={onTaskClick} tasks={tasks} />
     </SidebarContainer>
   );
 };

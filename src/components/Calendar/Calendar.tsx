@@ -11,6 +11,8 @@ import MonthView from './MonthView';
 import TaskViewByDate from './TaskViewByDate';
 import RightSidebar from '../RightSidebar/RightSideBar';
 import { theme } from '../../styles/theme';
+import TaskModal from '../TaskModal';
+import { v4 as uuidv4 } from 'uuid'; // Para gerar IDs únicos para novas tarefas
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -61,6 +63,11 @@ const Calendar: React.FC = () => {
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [tasks, setTasks] = useState<Task[]>(mockTasks); // Using mock data
 
+  // Estados para o modal de tarefa
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+  const [initialDateForNewTask, setInitialDateForNewTask] = useState<Date | undefined>(undefined);
+
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {
       switch (viewMode) {
@@ -88,6 +95,48 @@ const Calendar: React.FC = () => {
     // setViewMode('day'); // Optionally switch to day view when a day is clicked
   }, []);
 
+  // Abre o modal para criar uma nova tarefa em uma data específica
+  const handleOpenCreateTaskModal = useCallback((date: Date) => {
+    handleDateClick(date);
+    setInitialDateForNewTask(date);
+    setTaskToEdit(null);
+    setIsTaskModalOpen(true);
+  }, []);
+
+  // Abre o modal para editar uma tarefa existente
+  const handleOpenEditTaskModal = useCallback((task: Task) => {
+    setTaskToEdit(task);
+    setInitialDateForNewTask(undefined); // Não relevante para edição
+    setIsTaskModalOpen(true);
+  }, []);
+
+  const handleCloseTaskModal = useCallback(() => {
+    setIsTaskModalOpen(false);
+    setTaskToEdit(null);
+    setInitialDateForNewTask(undefined);
+  }, []);
+
+  const handleSaveTask = useCallback((task: Task) => {
+    setTasks(prevTasks => {
+      const existingTaskIndex = prevTasks.findIndex(t => t.id === task.id);
+      if (existingTaskIndex !== -1) {
+        // Editar tarefa existente
+        const updatedTasks = [...prevTasks];
+        updatedTasks[existingTaskIndex] = task;
+        return updatedTasks;
+      } else {
+        // Adicionar nova tarefa
+        return [...prevTasks, { ...task, id: task.id || uuidv4() }]; // Garante um ID se não tiver
+      }
+    });
+    handleCloseTaskModal();
+  }, [handleCloseTaskModal]);
+
+  const handleDeleteTask = useCallback((taskId: string) => {
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    handleCloseTaskModal();
+  }, [handleCloseTaskModal]);
+
   const renderCalendarView = useMemo(() => {
     let days: DayInfo[] = [];
     switch (viewMode) {
@@ -102,7 +151,7 @@ const Calendar: React.FC = () => {
         break;
       case 'tasks':
         // Task view handles its own internal date grouping
-        return <TaskViewByDate tasks={tasks} onTaskClick={(task) => { console.log('Task clicked:', task.title); }} />;
+        return <TaskViewByDate tasks={tasks} onTaskClick={handleOpenEditTaskModal} />;
       default:
         days = getMonthDays(currentDate);
     }
@@ -114,24 +163,31 @@ const Calendar: React.FC = () => {
     }));
 
     if (viewMode === 'month') {
-      return <MonthView days={daysWithTasks} tasks={tasks} onDayClick={handleDateClick} />;
+      return (
+        <MonthView
+          days={daysWithTasks}
+          tasks={tasks}
+          onDayClick={handleOpenCreateTaskModal} // Abre modal de criação
+          onTaskClick={handleOpenEditTaskModal}  // Abre modal de edição
+        />
+      );
     }
     // TODO: Implement DayView and WeekView similarly
     if (viewMode === 'day') {
         // Simple day view for demonstration
         const todayInfo = daysWithTasks[0] || getDayInfo(currentDate);
         return (
-            <TaskViewByDate tasks={todayInfo.tasks} /> // Reuse task view for single day
+            <TaskViewByDate tasks={todayInfo.tasks} onTaskClick={handleOpenEditTaskModal} />
         );
     }
     if (viewMode === 'week') {
         // Simple week view for demonstration, showing tasks grouped by day
         return (
-            <TaskViewByDate tasks={daysWithTasks.flatMap(day => day.tasks)} />
+            <TaskViewByDate tasks={daysWithTasks.flatMap(day => day.tasks)} onTaskClick={handleOpenEditTaskModal} />
         );
     }
     return null; // Fallback
-  }, [currentDate, viewMode, tasks, handleDateClick]);
+  }, [currentDate, viewMode, tasks, handleOpenCreateTaskModal, handleOpenEditTaskModal]);
 
   return (
     <CalendarContainer>
@@ -159,6 +215,16 @@ const Calendar: React.FC = () => {
         }}
         selectedDate={selectedDate}
         tasks={tasks}
+        onTaskClick={handleOpenEditTaskModal}
+      />
+      {/* O modal de tarefa */}
+      <TaskModal
+        isOpen={isTaskModalOpen}
+        onClose={handleCloseTaskModal}
+        task={taskToEdit}
+        onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
+        initialDate={initialDateForNewTask}
       />
     </CalendarContainer>
   );

@@ -10,6 +10,7 @@ interface MonthViewProps {
   days: DayInfo[];
   tasks: Task[];
   onDayClick: (date: Date) => void;
+  onTaskClick: (task: Task) => void;
 }
 
 const MonthGrid = styled.div`
@@ -118,7 +119,7 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   }
 `;
 
-const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick }) => {
+const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskClick }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
@@ -146,7 +147,14 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick }) => {
             </div>
             <div className="tasks-list">
               {displayedTasks.map(task => (
-                <div key={task.id} className="task-item" style={{ backgroundColor: task.color + '20', borderLeftColor: task.color }}>
+                <div key={task.id} 
+                className="task-item" 
+                style={{ backgroundColor: task.color + '20', borderLeftColor: task.color }}
+                onClick={(e) => {
+                   e.stopPropagation();
+                   e.preventDefault();
+                   onTaskClick(task);
+                }}>
                   {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
                 </div>
               ))}
