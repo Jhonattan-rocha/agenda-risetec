@@ -3,7 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { Card } from '../Common';
 import type { Task } from '../../types';
-import { format, isFuture, isToday } from 'date-fns';
+import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { theme } from '../../styles/theme';
 
@@ -67,9 +67,17 @@ const NoTasksMessage = styled.p`
 `;
 
 const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
-  const sortedTasks = tasks
-    .filter(task => isFuture(task.date) || isToday(task.date))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+  const sortedTasks: Array<Task> = [...tasks];
+
+  sortedTasks.sort((a, b) => {
+    const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
+    if (dateDiff !== 0) return dateDiff;
+
+    const startDiff = String(a.startTime).localeCompare(String(b.startTime));
+    if (startDiff !== 0) return startDiff;
+
+    return String(a.endTime).localeCompare(String(b.endTime));
+  });
 
   return (
     <DailyTasksContainer>
