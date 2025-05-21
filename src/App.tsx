@@ -1,7 +1,10 @@
 // src/App.tsx
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'; // Importe o nosso ThemeProvider
-import Calendar from './components/Calendar/Calendar';
+import { Provider } from 'react-redux';
+import { PersistGate } from 'redux-persist/integration/react';
+import CalendarScreen from './components/Calendar/Calendar';
 import styled from 'styled-components'; // Importe styled-components aqui para o botão de tema
+import store, { persistor } from './store';
 
 // Estilo para o botão de alternar tema
 const ThemeToggleButton = styled.button`
@@ -27,7 +30,7 @@ const AppContent: React.FC = () => {
 
   return (
     <>
-      <Calendar />
+      <CalendarScreen />
       <ThemeToggleButton onClick={toggleTheme}>
         {themeName === 'light' ? 'Ativar Tema Escuro' : 'Ativar Tema Claro'}
       </ThemeToggleButton>
@@ -37,9 +40,13 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <ThemeProvider> {/* Use o nosso ThemeProvider aqui */}
-      <AppContent />
-    </ThemeProvider>
+    <Provider store={store}>
+      <PersistGate persistor={persistor}>
+        <ThemeProvider>
+          <AppContent />
+        </ThemeProvider>
+      </PersistGate>
+    </Provider>
   );
 }
 

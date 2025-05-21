@@ -4,15 +4,18 @@ import styled from 'styled-components';
 import MiniCalendar from './MiniCalendar';
 import UpcomingTasks from './UpcomingTasks';
 import { theme } from '../../styles/theme';
-import type { Task } from '../../types';
+import type { Calendar, Task } from '../../types';
 import DailyTasks from './DailyTasks';
+import Calendars from './Calendars';
 
 interface RightSidebarProps {
   currentDate: Date;
   onDateChange: (date: Date) => void;
   selectedDate: Date;
   tasks: Task[];
+  calendars: Calendar[];
   onTaskClick: (task: Task) => void;
+  onCalendarClick: (calendar: Calendar) => void;
 }
 
 const SidebarContainer = styled.aside`
@@ -46,10 +49,14 @@ const SidebarContainer = styled.aside`
   }
 `;
 
-const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, selectedDate, tasks, onTaskClick }) => {
+const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, selectedDate, tasks, calendars, onTaskClick, onCalendarClick }) => {
   return (
     <SidebarContainer>
       <MiniCalendar currentDate={currentDate} onDateClick={onDateChange} selectedDate={selectedDate} />
+      <Calendars
+        calendars={calendars}
+        onCalendarClick={onCalendarClick}
+      />
       <DailyTasks onTaskClik={onTaskClick} tasks={tasks.filter(task => {
           const aux = new Date(currentDate.toISOString());
           aux.setHours(0);

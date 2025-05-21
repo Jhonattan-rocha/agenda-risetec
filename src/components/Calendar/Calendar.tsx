@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
-import type { DayInfo, Task, ViewMode } from '../../types';
+import type { Calendar, DayInfo, Task, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
 import { mockTasks } from '../../data/mockTasks';
 import CalendarHeader from './CalendarHeader';
@@ -13,6 +13,8 @@ import RightSidebar from '../RightSidebar/RightSideBar';
 import { theme } from '../../styles/theme';
 import TaskModal from '../TaskModal';
 import { v4 as uuidv4 } from 'uuid'; // Para gerar IDs únicos para novas tarefas
+import api from '../../services/axios';
+import CalendarModal from '../CalendarModal';
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -57,16 +59,35 @@ const ViewWrapper = styled.div`
   }
 `;
 
-const Calendar: React.FC = () => {
+const CalendarScreen: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // For highlighting in mini-calendar/month view
   const [viewMode, setViewMode] = useState<ViewMode>('month');
+  const [calendars, setCalendars] = useState<Array<Calendar>>([]);
   const [tasks, setTasks] = useState<Task[]>(mockTasks); // Using mock data
 
   // Estados para o modal de tarefa
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [initialDateForNewTask, setInitialDateForNewTask] = useState<Date | undefined>(undefined);
+
+  // calendarios
+  const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
+  const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
+
+  const fetchAllTaskas = useCallback(async () => {
+    try{
+      const req = await api.get("/event", {
+        headers: {
+          Authorization: `Bearer ${"token"}`
+        }
+      });
+
+      console.log(req);
+    }catch(err){
+      console.log(err);
+    }
+  }, []);
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {
@@ -83,6 +104,33 @@ const Calendar: React.FC = () => {
       }
     });
   }, [viewMode]);
+
+  const handleOpenCreateCalendarModal = () => {
+    setCalendarToEdit(null);
+    setIsCalendarModalOpen(true);
+  };
+
+  const handleOpenEditCalendarModal = (calendar: Calendar) => {
+    setCalendarToEdit(calendar);
+    setIsCalendarModalOpen(true);
+  };
+
+  const handleCloseCalendarModal = () => {
+    setIsCalendarModalOpen(false);
+    setCalendarToEdit(null);
+  };
+
+  const handleSaveCalendar = (calendar: Calendar) => {
+    // Aqui você faria a lógica para salvar o calendário (API call, atualizar estado, etc.)
+    console.log('Salvar Calendário:', calendar);
+    handleCloseCalendarModal();
+  };
+
+  const handleDeleteCalendar = (calendarId: string) => {
+    // Aqui você faria a lógica para excluir o calendário
+    console.log('Excluir Calendário ID:', calendarId);
+    handleCloseCalendarModal();
+  };
 
   const handleTodayClick = useCallback(() => {
     setCurrentDate(new Date());
@@ -207,6 +255,8 @@ const Calendar: React.FC = () => {
         </CalendarBody>
       </MainContent>
       <RightSidebar
+        calendars={calendars}
+        onCalendarClick={handleOpenEditCalendarModal}
         currentDate={currentDate}
         onDateChange={(date) => {
           setCurrentDate(date);
@@ -226,8 +276,15 @@ const Calendar: React.FC = () => {
         onDelete={handleDeleteTask}
         initialDate={initialDateForNewTask}
       />
+      <CalendarModal
+        isOpen={isCalendarModalOpen}
+        onClose={handleCloseCalendarModal}
+        calendar={calendarToEdit}
+        onSave={handleSaveCalendar}
+        onDelete={handleDeleteCalendar} // Passa a função de exclusão se necessário
+      />
     </CalendarContainer>
   );
 };
 
-export default Calendar;
+export default CalendarScreen;

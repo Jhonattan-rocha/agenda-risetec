@@ -2,6 +2,14 @@
 
 export type ViewMode = 'month' | 'week' | 'day' | 'tasks';
 
+export interface Calendar {
+  id: string;
+  name: string;
+  color: string;
+  visible: boolean;
+  tasks: Array<Task>
+}
+
 export interface Task {
   id: string;
   title: string;
