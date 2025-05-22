@@ -69,7 +69,7 @@ const NoTasksMessage = styled.p`
 const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
   const sortedTasks = tasks
     .filter(task => isFuture(task.date) || isToday(task.date))
-    .sort((a, b) => a.date.getTime() - b.date.getTime());
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   return (
     <UpcomingTasksContainer>

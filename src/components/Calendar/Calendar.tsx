@@ -1,5 +1,5 @@
 // src/components/Calendar/Calendar.tsx
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import type { Calendar, DayInfo, Task, ViewMode } from '../../types';
@@ -15,6 +15,9 @@ import TaskModal from '../TaskModal';
 import { v4 as uuidv4 } from 'uuid'; // Para gerar IDs únicos para novas tarefas
 import api from '../../services/axios';
 import CalendarModal from '../CalendarModal';
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
+import { useNavigate } from 'react-router-dom';
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -64,8 +67,9 @@ const CalendarScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // For highlighting in mini-calendar/month view
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
-  const [tasks, setTasks] = useState<Task[]>(mockTasks); // Using mock data
-
+  const [tasks, setTasks] = useState<Task[]>([]); // Using mock data
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
+  const navigate = useNavigate();
   // Estados para o modal de tarefa
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
@@ -79,15 +83,29 @@ const CalendarScreen: React.FC = () => {
     try{
       const req = await api.get("/event", {
         headers: {
-          Authorization: `Bearer ${"token"}`
+          Authorization: `Bearer ${user.token}`
         }
       });
-
-      console.log(req);
+      const tasks = req.data as Array<Task>;
+      setTasks(tasks);
     }catch(err){
       console.log(err);
     }
-  }, []);
+  }, [user]);
+
+  const fetchAllCalendars = useCallback(async () => {
+    try{
+      const req = await api.get("/calendar", {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      const calendars = req.data as Array<Calendar>;
+      setCalendars(calendars);
+    }catch(err){
+      console.log(err);
+    }
+  }, [user]);
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {
@@ -162,23 +180,8 @@ const CalendarScreen: React.FC = () => {
     setIsTaskModalOpen(false);
     setTaskToEdit(null);
     setInitialDateForNewTask(undefined);
-  }, []);
-
-  const handleSaveTask = useCallback((task: Task) => {
-    setTasks(prevTasks => {
-      const existingTaskIndex = prevTasks.findIndex(t => t.id === task.id);
-      if (existingTaskIndex !== -1) {
-        // Editar tarefa existente
-        const updatedTasks = [...prevTasks];
-        updatedTasks[existingTaskIndex] = task;
-        return updatedTasks;
-      } else {
-        // Adicionar nova tarefa
-        return [...prevTasks, { ...task, id: task.id || uuidv4() }]; // Garante um ID se não tiver
-      }
-    });
-    handleCloseTaskModal();
-  }, [handleCloseTaskModal]);
+    fetchAllTaskas();
+  }, [fetchAllTaskas]);
 
   const handleDeleteTask = useCallback((taskId: string) => {
     setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
@@ -237,6 +240,21 @@ const CalendarScreen: React.FC = () => {
     return null; // Fallback
   }, [currentDate, viewMode, tasks, handleOpenCreateTaskModal, handleOpenEditTaskModal]);
 
+  useEffect(() => {
+    try{
+        if(!user.isLoggedIn){
+            navigate("/login");            
+        }
+    }catch(err){
+        console.log(err);
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    fetchAllTaskas();
+    fetchAllCalendars();
+  }, [fetchAllTaskas, fetchAllCalendars]);
+
   return (
     <CalendarContainer>
       <MainContent>
@@ -273,7 +291,6 @@ const CalendarScreen: React.FC = () => {
         isOpen={isTaskModalOpen}
         onClose={handleCloseTaskModal}
         task={taskToEdit}
-        onSave={handleSaveTask}
         onDelete={handleDeleteTask}
         initialDate={initialDateForNewTask}
       />

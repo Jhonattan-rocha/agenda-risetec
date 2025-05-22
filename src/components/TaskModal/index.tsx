@@ -1,17 +1,20 @@
 // src/components/TaskModal.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled, { css } from 'styled-components';
 import { Button, Card } from '../Common';
 import type { Calendar, Task, User } from '../../types';
 import { theme } from '../../styles/theme';
 import { format, parseISO } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
+import api from '../../services/axios';
+import ActivityIndicator from '../ActivityIndicator';
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task?: Task | null; // Tarefa para edição/visualização. Null para criação.
-  onSave: (task: Task) => void;
   onDelete: (taskId: string) => void;
   initialDate?: Date; // Data inicial para nova tarefa
 }
@@ -206,7 +209,7 @@ const ModalFooter = styled.div<{ $isEditing: boolean }>`
   `}
 `;
 
-const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, onDelete, initialDate }) => {
+const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onDelete, initialDate }) => {
   const [currentTask, setCurrentTask] = useState<Partial<Task>>({
     title: '',
     description: '',
@@ -220,7 +223,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
   });
   const [users, setUsers] = useState<Array<User>>([]);
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!task;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (task) {
@@ -263,10 +268,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
   };
 
   const handleSave = () => {
-    if (!currentTask.title || !currentTask.date) {
-      alert('Título e Data são obrigatórios.');
+    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id || !currentTask.user_id) {
+      alert('Título, Data, Usuário e Calendario são obrigatórios.');
       return;
     }
+    setIsLoading(true);
 
     const newTask: Task = {
       id: currentTask.id || uuidv4(),
@@ -280,8 +286,19 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
       calendar_id: String(currentTask.calendar_id),
       user_id: String(currentTask.user_id)
     };
-    onSave(newTask);
-    onClose();
+    const req = api.post("/event", {...newTask}, {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    })
+    
+    req.then(() => {
+      setIsLoading(false);
+      onClose();
+    }).catch(err => {
+      console.log(err);
+      setIsLoading(false);
+    })
   };
 
   const handleDelete = () => {
@@ -290,6 +307,39 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
       onClose();
     }
   };
+
+  const fetchAllCalendars = useCallback(async () => {
+    try{
+      const req = await api.get("/calendar", {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      const calendars = req.data as Array<Calendar>;
+      setCalendars(calendars);
+    }catch(err){
+      console.log(err);
+    }
+  }, [user]);
+
+  const fetchAllUsers = useCallback(async () => {
+    try{
+      const req = await api.get("/user", {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+      const users = req.data as Array<User>;
+      setUsers(users);
+    }catch(err){
+      console.log(err);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    fetchAllUsers();
+    fetchAllCalendars();
+  }, [fetchAllUsers, fetchAllCalendars]);
 
   if (!isOpen) return null;
 
@@ -371,7 +421,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
               id="calendar_id"
               name="calendar_id"
               value={currentTask.calendar_id || ''}
-              onChange={handleChange}
+              onChange={(e) => {
+                const aux = calendars.find(c => c.id === e.target.value);
+                setCurrentTask({
+                  ...currentTask,
+                  color: aux?.color
+                });
+                handleChange(e);
+              }}
               required
             >
               <option value="" disabled>Selecione um calendário</option>
@@ -432,9 +489,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
             <Button outline onClick={onClose}>
               Cancelar
             </Button>
-            <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
-              {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
-            </Button>
+            {isLoading ? (
+              <ActivityIndicator />
+            ) : (
+              <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
+                {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
+              </Button>
+            )}
           </div>
         </ModalFooter>
       </ModalContent>

@@ -7,7 +7,7 @@ export default function reducers(reducers: Reducer){
         {
             key: "BASE",
             storage,
-            whitelist: ['authreducer', 'userreducer'],
+            whitelist: ['authreducer'],
         }, reducers
     );
 

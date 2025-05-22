@@ -1,8 +1,14 @@
 // src/components/LoginPage.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Button, Card } from '../Common';
 import { theme } from '../../styles/theme';
+import api from '../../services/axios';
+import { useDispatch, useSelector } from 'react-redux';
+import * as actions from '../../store/modules/authReducer/actions';
+import type { AuthState } from '../../store/modules/types';
+import { useNavigate } from 'react-router-dom';
+import ActivityIndicator from '../ActivityIndicator';
 
 const LoginPageContainer = styled.div`
   display: flex;
@@ -70,18 +76,44 @@ const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const handleLoginClick = () => {
     if (username && password) {
-    //   onLogin(username, password);
-      setError(null);
-      // Em uma aplicação real, você resetaria os campos após uma tentativa de login
-      // setUsername('');
-      // setPassword('');
+        setIsLoading(true);
+        const req = api.post("/token", {username, password}, {
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+        });
+
+        req.then((response) => {
+            dispatch(actions.LoginSuccess({ email: response.data.user.email, id: response.data.user.id, token: response.data.access_token}));
+            setError(null);
+            setUsername('');
+            setPassword('');
+            setIsLoading(false);
+        }).catch(err => {
+            setError(String(err));
+            setIsLoading(false);
+        })
     } else {
       setError('Por favor, preencha todos os campos.');
     }
   };
+
+  useEffect(() => {
+    try{
+        if(user.isLoggedIn){
+            navigate("/");            
+        }
+    }catch(err){
+        console.log(err);
+    }
+  }, [user, navigate]);
 
   return (
     <LoginPageContainer>
@@ -106,9 +138,13 @@ const LoginPage: React.FC = () => {
           />
         </FormGroup>
         {error && <ErrorMessage>{error}</ErrorMessage>}
-        <LoginButton primary onClick={handleLoginClick}>
-          Entrar
-        </LoginButton>
+        {isLoading ? (
+          <ActivityIndicator />
+        ) : (
+          <LoginButton primary onClick={handleLoginClick}>
+            Entrar
+          </LoginButton>
+        )}
       </LoginForm>
     </LoginPageContainer>
   );
