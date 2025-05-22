@@ -147,7 +147,7 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskCl
             </div>
             <div className="tasks-list">
               {displayedTasks.map(task => (
-                <div key={task.id} 
+                <div key={task.id}
                 className="task-item" 
                 style={{ backgroundColor: task.color + '20', borderLeftColor: task.color }}
                 onClick={(e) => {

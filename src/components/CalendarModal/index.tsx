@@ -4,13 +4,15 @@ import styled from 'styled-components';
 import { Button, Card } from '../Common';
 import { theme } from '../../styles/theme';
 import type { Calendar } from '../../types';
+import type { AuthState } from '../../store/modules/types';
+import { useSelector } from 'react-redux';
+import api from '../../services/axios';
+import ActivityIndicator from '../ActivityIndicator';
 
 interface CalendarModalProps {
   isOpen: boolean;
   onClose: () => void;
   calendar?: Calendar | null; // Calendário para edição/visualização. Null para criação.
-  onSave: (calendar: Calendar) => void;
-  onDelete?: (calendarId: string) => void; // Opcional, pois nem sempre se pode excluir
 }
 
 const ModalOverlay = styled.div<{ $isOpen: boolean }>`
@@ -131,6 +133,8 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
   border: 2px solid ${props => props.$isSelected ? theme.colors.primary : 'transparent'};
   box-shadow: ${props => props.$isSelected ? `0 0 0 2px ${theme.colors.primaryLight}` : 'none'};
   transition: all 0.2s ease-in-out;
+  transform: ${props => props.};
+
   &:hover {
     transform: scale(1.1);
   }
@@ -151,7 +155,7 @@ const ModalFooter = styled.div<{ $isEditing: boolean }>`
   `}
 `;
 
-const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar, onSave, onDelete }) => {
+const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar }) => {
   const [currentCalendar, setCurrentCalendar] = useState<Calendar>({
     name: '',
     color: predefinedColors[0],
@@ -159,8 +163,9 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
     id: "",
     tasks: []
   });
-
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (calendar) {
@@ -198,13 +203,43 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
     const calendarToSave = calendar?.id
       ? { ...currentCalendar, id: calendar.id }
       : currentCalendar;
-    onSave(calendarToSave);
+
+    const req = isEditing ? api.put(`/calendar/${calendarToSave.id}`, {...calendarToSave}, {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    }) : api.post("/calendar", {...calendarToSave}, {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    })
+    
+    req.then(() => {
+      setIsLoading(false);
+      onClose();
+    }).catch(err => {
+      console.log(err);
+      setIsLoading(false);
+    });
     onClose();
   };
 
   const handleDelete = () => {
-    if (calendar?.id && onDelete && window.confirm('Tem certeza que deseja excluir este calendário?')) {
-      onDelete(calendar.id);
+    if (calendar?.id && window.confirm('Tem certeza que deseja excluir este calendário?')) {
+      setIsLoading(true);
+      api.delete(`/calendar/${calendar.id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      })
+      .then(() => {
+        setIsLoading(false);
+        onClose();
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        console.log(err);
+      });
       onClose();
     }
   };
@@ -255,19 +290,23 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
           </CheckboxGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && onDelete && (
+          {isEditing && isLoading && (
             <Button danger onClick={handleDelete}>
               Excluir
             </Button>
           )}
-          <div>
-            <Button outline onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
-              {isEditing ? 'Salvar Alterações' : 'Criar Calendário'}
-            </Button>
-          </div>
+          {isLoading ? (
+            <ActivityIndicator />
+          ) : (
+            <div>
+              <Button outline onClick={onClose}>
+                Cancelar
+              </Button>
+              <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
+                {isEditing ? 'Salvar Alterações' : 'Criar Calendário'}
+              </Button>
+            </div>
+          )}
         </ModalFooter>
       </ModalContent>
     </ModalOverlay>

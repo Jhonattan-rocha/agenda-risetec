@@ -138,18 +138,6 @@ const CalendarScreen: React.FC = () => {
     setCalendarToEdit(null);
   };
 
-  const handleSaveCalendar = (calendar: Calendar) => {
-    // Aqui você faria a lógica para salvar o calendário (API call, atualizar estado, etc.)
-    console.log('Salvar Calendário:', calendar);
-    handleCloseCalendarModal();
-  };
-
-  const handleDeleteCalendar = (calendarId: string) => {
-    // Aqui você faria a lógica para excluir o calendário
-    console.log('Excluir Calendário ID:', calendarId);
-    handleCloseCalendarModal();
-  };
-
   const handleTodayClick = useCallback(() => {
     setCurrentDate(new Date());
     setSelectedDate(new Date());
@@ -182,11 +170,6 @@ const CalendarScreen: React.FC = () => {
     setInitialDateForNewTask(undefined);
     fetchAllTaskas();
   }, [fetchAllTaskas]);
-
-  const handleDeleteTask = useCallback((taskId: string) => {
-    setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
-    handleCloseTaskModal();
-  }, [handleCloseTaskModal]);
 
   const renderCalendarView = useMemo(() => {
     let days: DayInfo[] = [];
@@ -291,15 +274,12 @@ const CalendarScreen: React.FC = () => {
         isOpen={isTaskModalOpen}
         onClose={handleCloseTaskModal}
         task={taskToEdit}
-        onDelete={handleDeleteTask}
         initialDate={initialDateForNewTask}
       />
       <CalendarModal
         isOpen={isCalendarModalOpen}
         onClose={handleCloseCalendarModal}
         calendar={calendarToEdit}
-        onSave={handleSaveCalendar}
-        onDelete={handleDeleteCalendar} // Passa a função de exclusão se necessário
       />
     </CalendarContainer>
   );

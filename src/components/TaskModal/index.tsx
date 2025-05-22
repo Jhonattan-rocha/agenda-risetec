@@ -15,7 +15,6 @@ interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   task?: Task | null; // Tarefa para edição/visualização. Null para criação.
-  onDelete: (taskId: string) => void;
   initialDate?: Date; // Data inicial para nova tarefa
 }
 
@@ -200,7 +199,9 @@ const predefinedColors = [
 
 const ModalFooter = styled.div<{ $isEditing: boolean }>`
   display: flex;
-  justify-content: flex-end;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
   gap: ${theme.spacing.md};
   margin-top: ${theme.spacing.lg};
 
@@ -209,7 +210,7 @@ const ModalFooter = styled.div<{ $isEditing: boolean }>`
   `}
 `;
 
-const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onDelete, initialDate }) => {
+const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDate }) => {
   const [currentTask, setCurrentTask] = useState<Partial<Task>>({
     title: '',
     description: '',
@@ -286,7 +287,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onDelete, 
       calendar_id: String(currentTask.calendar_id),
       user_id: String(currentTask.user_id)
     };
-    const req = api.post("/event", {...newTask}, {
+
+    const req = isEditing ? api.put(`/event/${currentTask.id}`, {...newTask}, {
+      headers: {
+        Authorization: `Bearer ${user.token}`
+      }
+    }) : api.post("/event", {...newTask}, {
       headers: {
         Authorization: `Bearer ${user.token}`
       }
@@ -298,13 +304,25 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onDelete, 
     }).catch(err => {
       console.log(err);
       setIsLoading(false);
-    })
+    });
   };
 
   const handleDelete = () => {
     if (task?.id && window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
-      onDelete(task.id);
-      onClose();
+      setIsLoading(true);
+      api.delete(`/event/${task.id}`, {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      })
+      .then(() => {
+        setIsLoading(false);
+        onClose();
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        console.log(err);
+      });
     }
   };
 
@@ -480,21 +498,23 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onDelete, 
           </FormGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && (
+          {isEditing && !isLoading && (
             <Button danger onClick={handleDelete}>
               Excluir
             </Button>
           )}
           <div>
-            <Button outline onClick={onClose}>
-              Cancelar
-            </Button>
             {isLoading ? (
               <ActivityIndicator />
             ) : (
-              <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
-                {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
-              </Button>
+              <>
+                <Button outline onClick={onClose}>
+                  Cancelar
+                </Button>
+                <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
+                  {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
+                </Button>
+              </>
             )}
           </div>
         </ModalFooter>
