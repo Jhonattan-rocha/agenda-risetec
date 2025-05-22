@@ -257,6 +257,7 @@ const CalendarScreen: React.FC = () => {
       <RightSidebar
         calendars={calendars}
         onCalendarClick={handleOpenEditCalendarModal}
+        onCreateCalendar={handleOpenCreateCalendarModal}
         currentDate={currentDate}
         onDateChange={(date) => {
           setCurrentDate(date);

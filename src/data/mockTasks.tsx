@@ -11,7 +11,9 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 17),
     startTime: '10:00',
     endTime: '11:00',
-    color: '#FFDDC1', // Peach
+    color: '#FFDDC1',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '2',
@@ -19,7 +21,9 @@ export const mockTasks: Task[] = [
     description: 'Finalizar e enviar o relatório de desempenho do último mês.',
     date: createDate(2025, 5, 20),
     isAllDay: true,
-    color: '#D4E8D4', // Light Green
+    color: '#D4E8D4',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '3',
@@ -27,7 +31,9 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 22),
     startTime: '14:30',
     endTime: '15:30',
-    color: '#C7CEEA', // Lavender
+    color: '#C7CEEA',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '4',
@@ -35,7 +41,9 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 17),
     startTime: '18:00',
     endTime: '19:00',
-    color: '#F0E68C', // Khaki
+    color: '#F0E68C',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '5',
@@ -44,14 +52,18 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 25),
     startTime: '09:00',
     endTime: '12:00',
-    color: '#AED6F1', // Light Blue
+    color: '#AED6F1',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '6',
     title: 'Aniversário da Maria',
     date: createDate(2025, 5, 28),
     isAllDay: true,
-    color: '#FFC0CB', // Pink
+    color: '#FFC0CB',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '7',
@@ -60,14 +72,18 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 17),
     startTime: '11:30',
     endTime: '12:30',
-    color: '#AFEEEE', // Pale Turquoise
+    color: '#AFEEEE',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '8',
     title: 'Fazer Compras',
     date: createDate(2025, 5, 19),
     isAllDay: true,
-    color: '#E6E6FA', // Lavender (light)
+    color: '#E6E6FA',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '9',
@@ -75,7 +91,9 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 6, 5), // Next month task
     startTime: '16:00',
     endTime: '17:00',
-    color: '#B0C4DE', // Light Steel Blue
+    color: '#B0C4DE',
+    calendar_id: '',
+    user_id: ''
   },
   {
     id: '10',
@@ -83,6 +101,8 @@ export const mockTasks: Task[] = [
     date: createDate(2025, 5, 20),
     startTime: '07:00',
     endTime: '08:00',
-    color: '#87CEEB', // Sky Blue
+    color: '#87CEEB',
+    calendar_id: '',
+    user_id: ''
   },
 ];

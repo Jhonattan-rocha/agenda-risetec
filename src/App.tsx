@@ -2,9 +2,11 @@
 import { ThemeProvider, useTheme } from './contexts/ThemeContext'; // Importe o nosso ThemeProvider
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import CalendarScreen from './components/Calendar/Calendar';
 import styled from 'styled-components'; // Importe styled-components aqui para o botão de tema
 import store, { persistor } from './store';
+import LoginPage from './components/Login';
 
 // Estilo para o botão de alternar tema
 const ThemeToggleButton = styled.button`
@@ -42,9 +44,14 @@ const App: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor}>
-        <ThemeProvider>
-          <AppContent />
-        </ThemeProvider>
+        <BrowserRouter>
+          <ThemeProvider>
+            <Routes>
+              <Route path='/' index element={<AppContent />} />
+              <Route path='/login' element={<LoginPage />} />
+            </Routes>
+          </ThemeProvider>
+        </BrowserRouter>
       </PersistGate>
     </Provider>
   );

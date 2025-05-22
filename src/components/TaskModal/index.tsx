@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styled, { css } from 'styled-components';
 import { Button, Card } from '../Common';
-import type { Task } from '../../types';
+import type { Calendar, Task, User } from '../../types';
 import { theme } from '../../styles/theme';
 import { format, parseISO } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
@@ -88,6 +88,35 @@ const FormGroup = styled.div`
   flex-direction: column;
   margin-bottom: ${theme.spacing.sm};
 `;
+
+const Select = styled.select`
+  padding: ${theme.spacing.sm};
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius};
+  font-size: 1rem;
+  background-color: ${theme.colors.background}; /* já escuro */
+  color: ${theme.colors.textPrimary};
+  transition: border-color 0.2s ease;
+  appearance: none; /* remove setinha padrão */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='%23ccc' height='24' viewBox='0 0 24 24' width='24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right ${theme.spacing.sm} center;
+  background-size: 1rem;
+  padding-right: 2rem; /* espaço para a seta */
+
+  &:focus {
+    outline: none;
+    border-color: ${theme.colors.primary};
+  }
+
+  option {
+    background-color: ${theme.colors.background}; /* força fundo escuro nas opções */
+    color: ${theme.colors.textPrimary};
+  }
+`;
+
 
 const Label = styled.label`
   font-size: 0.9rem;
@@ -186,8 +215,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
     startTime: '',
     endTime: '',
     color: predefinedColors[0],
+    calendar_id: '',
+    user_id: ''
   });
-
+  const [users, setUsers] = useState<Array<User>>([]);
+  const [calendars, setCalendars] = useState<Array<Calendar>>([]);
   const isEditing = !!task;
 
   useEffect(() => {
@@ -207,11 +239,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
         startTime: '',
         endTime: '',
         color: predefinedColors[0],
+        calendar_id: '',
+        user_id: ''
       });
     }
   }, [task, initialDate]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
     setCurrentTask(prev => ({
       ...prev,
@@ -243,6 +277,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
       startTime: currentTask.startTime,
       endTime: currentTask.endTime,
       color: currentTask.color,
+      calendar_id: String(currentTask.calendar_id),
+      user_id: String(currentTask.user_id)
     };
     onSave(newTask);
     onClose();
@@ -307,6 +343,47 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, onSave, on
             />
             <Label htmlFor="isAllDay">Dia todo</Label>
           </CheckboxGroup>
+
+          {/* Dropdown para Usuário */}
+          <FormGroup>
+            <Label htmlFor="user_id">Usuário</Label>
+            <Select
+              id="user_id"
+              name="user_id"
+              value={currentTask.user_id || ''}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>Selecione um usuário</option>
+              {/* Assumindo que 'availableUsers' é um array de objetos User com 'id' e 'name' */}
+              {users.map(user => (
+                <option key={user.id} value={user.id}>
+                  {user.name} {/* Adapte para o campo de nome correto do seu tipo User */}
+                </option>
+              ))}
+            </Select>
+          </FormGroup>
+
+          {/* Dropdown para Calendário */}
+          <FormGroup>
+            <Label htmlFor="calendar_id">Calendário</Label>
+            <Select
+              id="calendar_id"
+              name="calendar_id"
+              value={currentTask.calendar_id || ''}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>Selecione um calendário</option>
+              {/* Assumindo que 'availableCalendars' é um array de objetos Calendar com 'id' e 'name' */}
+              {calendars.map(calendar => (
+                <option key={calendar.id} value={calendar.id}>
+                  {calendar.name} {/* Adapte para o campo de nome correto do seu tipo Calendar */}
+                </option>
+              ))}
+            </Select>
+          </FormGroup>
+
           {!currentTask.isAllDay && (
             <TimeInputs>
               <FormGroup>

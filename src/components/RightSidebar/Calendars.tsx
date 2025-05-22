@@ -71,7 +71,7 @@ const Calendars: React.FC<CalendarsProps> = ({ calendars, onCalendarClick, onCre
 
   return (
     <CalendarsContainer>
-      <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Próximas Tarefas</h3><FaPlus size={30} cursor={'pointer'} /></div>
+      <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Próximas Tarefas</h3><FaPlus size={30} cursor={'pointer'} onClick={onCreateCalendar} /></div>
       {sortedCalendars.length > 0 ? (
         <div className="calendar-list">
           {sortedCalendars.map(calendar => (
