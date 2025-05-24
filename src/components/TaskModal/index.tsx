@@ -220,7 +220,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     endTime: '',
     color: predefinedColors[0],
     calendar_id: '',
-    user_id: ''
+    user_id: '',
   });
   const [users, setUsers] = useState<Array<User>>([]);
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
@@ -334,6 +334,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         }
       });
       const calendars = req.data as Array<Calendar>;
+
       setCalendars(calendars);
     }catch(err){
       console.log(err);
@@ -357,6 +358,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   useEffect(() => {
     fetchAllUsers();
     fetchAllCalendars();
+
+    return () => {
+      setCalendars([]);
+      setUsers([]);
+    }
   }, [fetchAllUsers, fetchAllCalendars]);
 
   if (!isOpen) return null;
@@ -440,7 +446,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
               name="calendar_id"
               value={currentTask.calendar_id || ''}
               onChange={(e) => {
-                const aux = calendars.find(c => c.id === e.target.value);
+                const aux = calendars.find(c => Number(c.id) === Number(e.target.value));
+
                 setCurrentTask({
                   ...currentTask,
                   color: aux?.color

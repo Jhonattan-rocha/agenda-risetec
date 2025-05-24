@@ -82,18 +82,6 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
     flex-grow: 1;
     width: 100%;
     overflow-y: hidden; // Prevent individual cell scroll in month view
-    .task-item {
-      font-size: 0.7rem;
-      padding: 2px 4px;
-      margin-bottom: 2px;
-      border-radius: 4px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      background-color: ${props => props.color || theme.colors.primary}20;
-      color: ${theme.colors.textPrimary};
-      border-left: 3px solid ${props => props.color || theme.colors.primary};
-    }
     .more-tasks {
         font-size: 0.7rem;
         color: ${theme.colors.textSecondary};
@@ -119,6 +107,19 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   }
 `;
 
+const TaskItem = styled.div<{ $color: string }>`
+  font-size: 0.7rem;
+  padding: 2px 4px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background-color: ${props => props.$color}20;
+  color: ${theme.colors.textPrimary};
+  border-left: 3px solid ${props => props.$color};
+`;
+
 const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskClick }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
@@ -133,7 +134,7 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskCl
         const dayTasks = tasks.filter(task => isSameDay(task.date, dayInfo.date));
         const displayedTasks = dayTasks.slice(0, 2); // Show max 2 tasks
         const remainingTasksCount = dayTasks.length - displayedTasks.length;
-
+        
         return (
           <DayCell
             key={index}
@@ -146,18 +147,19 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskCl
               <span>{format(dayInfo.date, 'd')}</span>
             </div>
             <div className="tasks-list">
-              {displayedTasks.map(task => (
-                <div key={task.id}
-                className="task-item" 
-                style={{ backgroundColor: task.color + '20', borderLeftColor: task.color }}
-                onClick={(e) => {
-                   e.stopPropagation();
-                   e.preventDefault();
-                   onTaskClick(task);
-                }}>
-                  {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
-                </div>
-              ))}
+              {displayedTasks.map(task => {
+                return (
+                  <TaskItem key={task.id}
+                  $color={task.color || theme.colors.primary}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    onTaskClick(task);
+                  }}>
+                    {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
+                  </TaskItem>
+                );
+              })}
               {remainingTasksCount > 0 && (
                 <div className="more-tasks">
                   +{remainingTasksCount} mais

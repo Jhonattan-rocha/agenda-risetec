@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
 import type { Calendar, DayInfo, Task, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
-import { mockTasks } from '../../data/mockTasks';
 import CalendarHeader from './CalendarHeader';
 import ViewModeSelector from './ViewModeSelector';
 import MonthView from './MonthView';
@@ -12,7 +11,6 @@ import TaskViewByDate from './TaskViewByDate';
 import RightSidebar from '../RightSidebar/RightSideBar';
 import { theme } from '../../styles/theme';
 import TaskModal from '../TaskModal';
-import { v4 as uuidv4 } from 'uuid'; // Para gerar IDs únicos para novas tarefas
 import api from '../../services/axios';
 import CalendarModal from '../CalendarModal';
 import { useSelector } from 'react-redux';
@@ -136,6 +134,8 @@ const CalendarScreen: React.FC = () => {
   const handleCloseCalendarModal = () => {
     setIsCalendarModalOpen(false);
     setCalendarToEdit(null);
+    fetchAllCalendars();
+    fetchAllTaskas();
   };
 
   const handleTodayClick = useCallback(() => {
@@ -270,17 +270,21 @@ const CalendarScreen: React.FC = () => {
         onTaskClick={handleOpenEditTaskModal}
       />
       {/* O modal de tarefa */}
-      <TaskModal
-        isOpen={isTaskModalOpen}
-        onClose={handleCloseTaskModal}
-        task={taskToEdit}
-        initialDate={initialDateForNewTask}
-      />
-      <CalendarModal
-        isOpen={isCalendarModalOpen}
-        onClose={handleCloseCalendarModal}
-        calendar={calendarToEdit}
-      />
+      { isTaskModalOpen ? (
+        <TaskModal
+          isOpen={isTaskModalOpen}
+          onClose={handleCloseTaskModal}
+          task={taskToEdit}
+          initialDate={initialDateForNewTask}
+        />
+      ) : null }
+      { isCalendarModalOpen ? (
+        <CalendarModal
+          isOpen={isCalendarModalOpen}
+          onClose={handleCloseCalendarModal}
+          calendar={calendarToEdit}
+        />
+      ) : null }
     </CalendarContainer>
   );
 };

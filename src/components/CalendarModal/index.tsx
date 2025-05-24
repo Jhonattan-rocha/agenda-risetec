@@ -133,7 +133,7 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
   border: 2px solid ${props => props.$isSelected ? theme.colors.primary : 'transparent'};
   box-shadow: ${props => props.$isSelected ? `0 0 0 2px ${theme.colors.primaryLight}` : 'none'};
   transition: all 0.2s ease-in-out;
-  transform: ${props => props.};
+  transform: ${props => props.$isSelected ? 'scale(1.1)': '' };
 
   &:hover {
     transform: scale(1.1);
@@ -283,14 +283,14 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               id="visible"
               name="visible"
               type="checkbox"
-              checked={currentCalendar.visible}
+              checked={currentCalendar.visible ? currentCalendar.visible : false}
               onChange={handleChange}
             />
             <Label htmlFor="visible">Visível</Label>
           </CheckboxGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && isLoading && (
+          {isEditing && !isLoading && (
             <Button danger onClick={handleDelete}>
               Excluir
             </Button>

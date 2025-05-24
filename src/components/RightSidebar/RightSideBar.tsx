@@ -65,7 +65,6 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, 
           aux.setMinutes(0);
           aux.setSeconds(0);
           aux.setMilliseconds(0);
-          console.log(task, aux);
           return new Date(task.date).toISOString() === aux.toISOString();
       })}/>
       <UpcomingTasks onTaskClik={onTaskClick} tasks={tasks} />
