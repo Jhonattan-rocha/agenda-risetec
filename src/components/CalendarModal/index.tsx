@@ -166,7 +166,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  console.log(calendar);
   useEffect(() => {
     if (calendar) {
       setCurrentCalendar({
@@ -284,7 +284,9 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               name="visible"
               type="checkbox"
               checked={currentCalendar.visible ? currentCalendar.visible : false}
-              onChange={handleChange}
+              onChange={(e) => {
+                setCurrentCalendar({ ...currentCalendar, visible: e.target.checked });
+              }}
             />
             <Label htmlFor="visible">Visível</Label>
           </CheckboxGroup>

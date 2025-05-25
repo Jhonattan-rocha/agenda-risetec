@@ -5,11 +5,15 @@ import { Card } from '../Common';
 import type { Calendar } from '../../types';
 import { theme } from '../../styles/theme';
 import { FaPlus } from 'react-icons/fa';
+import api from '../../services/axios';
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
 
 interface CalendarsProps {
   calendars: Calendar[];
   onCalendarClick: (calendar: Calendar) => void;
   onCreateCalendar: () => void;
+  onUpdate: () => void;
 }
 
 const CalendarsContainer = styled(Card)`
@@ -66,8 +70,10 @@ const NoCalendarsMessage = styled.p`
   padding: ${theme.spacing.md} 0;
 `;
 
-const Calendars: React.FC<CalendarsProps> = ({ calendars, onCalendarClick, onCreateCalendar }) => {
+const Calendars: React.FC<CalendarsProps> = ({ calendars, onUpdate, onCalendarClick, onCreateCalendar }) => {
   const sortedCalendars = calendars;
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer );
+
   return (
     <CalendarsContainer>
       <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Calendarios</h3><FaPlus size={30} cursor={'pointer'} onClick={onCreateCalendar} /></div>
@@ -83,6 +89,15 @@ const Calendars: React.FC<CalendarsProps> = ({ calendars, onCalendarClick, onCre
               <div className="calendar-details">
                 <h4>{calendar.name}</h4>
               </div>
+              <input type='checkbox' checked={calendar.visible} onClick={async (e) => {
+                e.stopPropagation();
+                await api.put(`/calendar/${calendar.id}`, {...calendar, visible: !calendar.visible }, {
+                  headers: {
+                    Authorization: `Bearer ${user.token}`
+                  }
+                });
+                onUpdate();
+              }}/>
             </CalendarItemWrapper>
           ))}
         </div>

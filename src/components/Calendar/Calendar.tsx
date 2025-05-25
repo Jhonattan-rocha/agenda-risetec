@@ -65,7 +65,7 @@ const CalendarScreen: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // For highlighting in mini-calendar/month view
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
-  const [tasks, setTasks] = useState<Task[]>([]); // Using mock data
+  const [allTasks, setAllTasks] = useState<Task[]>([]); // Using mock data
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const navigate = useNavigate();
   // Estados para o modal de tarefa
@@ -77,6 +77,10 @@ const CalendarScreen: React.FC = () => {
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
 
+  const tasks = useMemo(() => {
+    return allTasks.filter(task => calendars.find(calendar => Number(calendar.id) === Number(task.calendar_id))?.visible );
+  }, [allTasks, calendars]);
+
   const fetchAllTaskas = useCallback(async () => {
     try{
       const req = await api.get("/event", {
@@ -85,7 +89,7 @@ const CalendarScreen: React.FC = () => {
         }
       });
       const tasks = req.data as Array<Task>;
-      setTasks(tasks);
+      setAllTasks(tasks);
     }catch(err){
       console.log(err);
     }
@@ -264,6 +268,10 @@ const CalendarScreen: React.FC = () => {
           setCurrentDate(date);
           setSelectedDate(date);
           setViewMode('month'); // Usually mini-calendar jumps to month view of selected date
+        }}
+        onUpdate={() => {
+          fetchAllTaskas();
+          fetchAllCalendars();
         }}
         selectedDate={selectedDate}
         tasks={tasks}
