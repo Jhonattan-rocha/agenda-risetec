@@ -1,14 +1,13 @@
 // src/components/Calendar/MonthView.tsx
 import React from 'react';
 import styled from 'styled-components';
-import { format, isSameDay } from 'date-fns';
+import { format } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
 import { theme } from '../../styles/theme';
 import { Card } from '../Common';
 
 interface MonthViewProps {
   days: DayInfo[];
-  tasks: Task[];
   onDayClick: (date: Date) => void;
   onTaskClick: (task: Task) => void;
 }
@@ -108,6 +107,9 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
 `;
 
 const TaskItem = styled.div<{ $color: string }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
   font-size: 0.7rem;
   padding: 2px 4px;
   margin-bottom: 2px;
@@ -120,7 +122,32 @@ const TaskItem = styled.div<{ $color: string }>`
   border-left: 3px solid ${props => props.$color};
 `;
 
-const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskClick }) => {
+const TaskTitle = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-grow: 1;
+`;
+
+const AvatarStack = styled.div`
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+`;
+
+const Avatar = styled.img`
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 1px solid white;
+  margin-left: -6px; // Efeito de sobreposição
+  
+  &:first-child {
+    margin-left: 0;
+  }
+`;
+
+const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   return (
@@ -131,8 +158,8 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskCl
         ))}
       </div>
       {days.map((dayInfo, index) => {
-        const dayTasks = tasks.filter(task => isSameDay(task.date, dayInfo.date));
-        const displayedTasks = dayTasks.slice(0, 2); // Show max 2 tasks
+        const dayTasks = dayInfo.tasks;
+        const displayedTasks = dayTasks.slice(0, 2);
         const remainingTasksCount = dayTasks.length - displayedTasks.length;
         
         return (
@@ -147,19 +174,25 @@ const MonthView: React.FC<MonthViewProps> = ({ days, tasks, onDayClick, onTaskCl
               <span>{format(dayInfo.date, 'd')}</span>
             </div>
             <div className="tasks-list">
-              {displayedTasks.map(task => {
-                return (
-                  <TaskItem key={task.id}
+              {displayedTasks.map(task => (
+                <TaskItem
+                  key={task.id}
                   $color={task.color || theme.colors.primary}
                   onClick={(e) => {
                     e.stopPropagation();
-                    e.preventDefault();
                     onTaskClick(task);
-                  }}>
+                  }}
+                >
+                  <TaskTitle>
                     {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
-                  </TaskItem>
-                );
-              })}
+                  </TaskTitle>
+                  <AvatarStack>
+                    {task.users.slice(0, 2).map(user => (
+                      <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
+                    ))}
+                  </AvatarStack>
+                </TaskItem>
+              ))}
               {remainingTasksCount > 0 && (
                 <div className="more-tasks">
                   +{remainingTasksCount} mais

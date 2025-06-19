@@ -1,5 +1,12 @@
-// src/data/mockTasks.ts
-import type { Task } from '../types';
+// src/data/mockTasks.tsx
+import type { Task, User } from '../types';
+
+// Dados de exemplo para usuários
+const mockUsers: User[] = [
+  { id: 'user-1', name: 'Alice', email: 'alice@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=alice', profile_id: '' },
+  { id: 'user-2', name: 'Bruno', email: 'bruno@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=bruno', profile_id: '' },
+  { id: 'user-3', name: 'Carla', email: 'carla@example.com', avatarUrl: 'https://i.pravatar.cc/150?u=carla', profile_id: '' },
+];
 
 const createDate = (year: number, month: number, day: number) => new Date(year, month - 1, day);
 
@@ -12,18 +19,18 @@ export const mockTasks: Task[] = [
     startTime: '10:00',
     endTime: '11:00',
     color: '#FFDDC1',
-    calendar_id: '',
-    user_id: ''
+    calendar_id: 'cal-1',
+    users: [mockUsers[0], mockUsers[1]]
   },
   {
     id: '2',
-    title: 'Entrega do Relatório Mensal',
+    title: 'Entrega do Relatório',
     description: 'Finalizar e enviar o relatório de desempenho do último mês.',
     date: createDate(2025, 5, 20),
     isAllDay: true,
     color: '#D4E8D4',
-    calendar_id: '',
-    user_id: ''
+    calendar_id: 'cal-1',
+    users: [mockUsers[0]]
   },
   {
     id: '3',
@@ -32,77 +39,18 @@ export const mockTasks: Task[] = [
     startTime: '14:30',
     endTime: '15:30',
     color: '#C7CEEA',
-    calendar_id: '',
-    user_id: ''
+    calendar_id: 'cal-2',
+    users: [mockUsers[2]]
   },
   {
     id: '4',
-    title: 'Aula de Yoga',
-    date: createDate(2025, 5, 17),
-    startTime: '18:00',
-    endTime: '19:00',
-    color: '#F0E68C',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '5',
     title: 'Planejamento de Marketing',
     description: 'Sessão de brainstorm para a nova campanha.',
     date: createDate(2025, 5, 25),
     startTime: '09:00',
     endTime: '12:00',
     color: '#AED6F1',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '6',
-    title: 'Aniversário da Maria',
-    date: createDate(2025, 5, 28),
-    isAllDay: true,
-    color: '#FFC0CB',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '7',
-    title: 'Revisar Código',
-    description: 'Revisão do PR de funcionalidade de login.',
-    date: createDate(2025, 5, 17),
-    startTime: '11:30',
-    endTime: '12:30',
-    color: '#AFEEEE',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '8',
-    title: 'Fazer Compras',
-    date: createDate(2025, 5, 19),
-    isAllDay: true,
-    color: '#E6E6FA',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '9',
-    title: 'Webinar de IA',
-    date: createDate(2025, 6, 5), // Next month task
-    startTime: '16:00',
-    endTime: '17:00',
-    color: '#B0C4DE',
-    calendar_id: '',
-    user_id: ''
-  },
-  {
-    id: '10',
-    title: 'Fitness',
-    date: createDate(2025, 5, 20),
-    startTime: '07:00',
-    endTime: '08:00',
-    color: '#87CEEB',
-    calendar_id: '',
-    user_id: ''
+    calendar_id: 'cal-1',
+    users: [mockUsers[1], mockUsers[2]]
   },
 ];

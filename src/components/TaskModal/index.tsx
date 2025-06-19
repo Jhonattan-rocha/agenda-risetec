@@ -10,7 +10,7 @@ import type { AuthState } from '../../store/modules/types';
 import api from '../../services/axios';
 import ActivityIndicator from '../ActivityIndicator';
 import { CheckboxGroup, ColorPickerContainer, ColorSwatch, FormGroup, Input, Label, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, 
-  Select, TextArea, TimeInputs
+  Select, TextArea, TimeInputs, UserCheckboxItem, UserSelectorContainer
  } from './styled';
 
 interface TaskModalProps {
@@ -34,14 +34,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     endTime: '',
     color: predefinedColors[0],
     calendar_id: '',
-    user_id: '',
+    users: [],
   });
   const [users, setUsers] = useState<Array<User>>([]);
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!task;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-
+  
   useEffect(() => {
     if (task) {
       setCurrentTask({
@@ -60,10 +60,28 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         endTime: '',
         color: predefinedColors[0],
         calendar_id: '',
-        user_id: ''
+        users: [],
       });
     }
   }, [task, initialDate]);
+
+  const handleUserChange = (userId: string) => {
+    setCurrentTask(prev => {
+      const selectedUsers = prev.users || [];
+      const userIndex = selectedUsers.findIndex(u => u.id === userId);
+      const user = users.find(u => u.id === userId);
+
+      if (!user) return prev;
+
+      if (userIndex > -1) {
+        // Remove usuário se já estiver selecionado
+        return { ...prev, users: selectedUsers.filter(u => u.id !== userId) };
+      } else {
+        // Adiciona usuário
+        return { ...prev, users: [...selectedUsers, user] };
+      }
+    });
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type, checked } = e.target as HTMLInputElement;
@@ -83,7 +101,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   };
 
   const handleSave = () => {
-    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id || !currentTask.user_id) {
+    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id || !currentTask.users) {
       alert('Título, Data, Usuário e Calendario são obrigatórios.');
       return;
     }
@@ -99,7 +117,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       endTime: currentTask.endTime,
       color: currentTask.color,
       calendar_id: String(currentTask.calendar_id),
-      user_id: String(currentTask.user_id)
+      users: currentTask.users ? currentTask.users : []
     };
 
     const req = isEditing ? api.put(`/event/${currentTask.id}`, {...newTask}, {
@@ -234,22 +252,20 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
           {/* Dropdown para Usuário */}
           <FormGroup>
-            <Label htmlFor="user_id">Usuário</Label>
-            <Select
-              id="user_id"
-              name="user_id"
-              value={currentTask.user_id || ''}
-              onChange={handleChange}
-              required
-            >
-              <option value="" disabled>Selecione um usuário</option>
-              {/* Assumindo que 'availableUsers' é um array de objetos User com 'id' e 'name' */}
+            <Label>Participantes</Label>
+            <UserSelectorContainer>
               {users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.name} {/* Adapte para o campo de nome correto do seu tipo User */}
-                </option>
+                <UserCheckboxItem key={user.id}>
+                  <input
+                    type="checkbox"
+                    id={`user-${user.id}`}
+                    checked={currentTask.users?.some(u => u.id === user.id) || false}
+                    onChange={() => handleUserChange(user.id)}
+                  />
+                  <label htmlFor={`user-${user.id}`}>{user.name}</label>
+                </UserCheckboxItem>
               ))}
-            </Select>
+            </UserSelectorContainer>
           </FormGroup>
 
           {/* Dropdown para Calendário */}

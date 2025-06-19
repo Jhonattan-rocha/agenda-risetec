@@ -189,3 +189,23 @@ export const ModalFooter = styled.div<{ $isEditing: boolean }>`
     justify-content: space-between;
   `}
 `;
+
+export const UserSelectorContainer = styled.div`
+  max-height: 150px;
+  overflow-y: auto;
+  border: 1px solid ${theme.colors.border};
+  border-radius: ${theme.borderRadius};
+  padding: ${theme.spacing.sm};
+`;
+
+export const UserCheckboxItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: ${theme.spacing.sm};
+  padding: ${theme.spacing.xs} 0;
+
+  label {
+    margin: 0;
+    font-weight: normal;
+  }
+`;

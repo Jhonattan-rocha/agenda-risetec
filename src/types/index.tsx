@@ -1,4 +1,4 @@
-// src/types/index.ts
+// src/types/index.tsx
 
 export type ViewMode = 'month' | 'week' | 'day' | 'tasks';
 
@@ -10,6 +10,7 @@ export interface Calendar {
   tasks: Array<Task>
 }
 
+// MODIFICADO: A tarefa agora pode ter múltiplos usuários.
 export interface Task {
   id: string;
   title: string;
@@ -20,7 +21,7 @@ export interface Task {
   endTime?: string;   // e.g., "10:00"
   color?: string;     // e.g., "#FFDDC1"
   calendar_id: string;
-  user_id: string;
+  users: User[]; // MODIFICADO: De user_id: string para users: User[]
 }
 
 export interface DayInfo {
@@ -36,11 +37,12 @@ export interface Profile {
   permissions: Array<{id: string; entity_name: string; can_view: boolean; can_delete: boolean; can_update: boolean; can_create: boolean;}>
 }
 
+// MODIFICADO: O usuário agora tem uma URL de avatar.
 export interface User {
   id: string;
   name: string;
   email: string;
-  password: string;
+  password?: string; // Senha é opcional no frontend
   profile_id: string;
-
+  avatarUrl: string; // NOVO: URL para a foto de perfil do usuário.
 }
