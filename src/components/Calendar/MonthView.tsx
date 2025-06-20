@@ -187,7 +187,7 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
                     {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
                   </TaskTitle>
                   <AvatarStack>
-                    {task.users.slice(0, 2).map(user => (
+                    {task.users?.slice(0, 2).map(user => (
                       <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
                     ))}
                   </AvatarStack>

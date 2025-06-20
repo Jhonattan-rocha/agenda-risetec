@@ -1,13 +1,17 @@
-// src/components/Settings/WhatsAppSettings.tsx
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../Common';
 import { theme } from '../../styles/theme';
-import { io, Socket } from 'socket.io-client';
 import { QRCodeCanvas } from 'qrcode.react';
 import ActivityIndicator from '../ActivityIndicator';
 import { FaCheckCircle, FaTimesCircle, FaQrcode } from 'react-icons/fa';
 
+// NOVO: Importa a instância configurada do Axios
+import api from '../../services/axios'; 
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
+
+// --- ESTILOS (Sem alterações) ---
 const SettingsCard = styled(Card)`
   h2 { margin-top: 0; }
   margin-top: ${theme.spacing.lg};
@@ -53,59 +57,112 @@ const ActionContainer = styled.div`
 `;
 
 const WhatsAppSettings: React.FC = () => {
-  const [status, setStatus] = useState<'disconnected' | 'loading_qr' | 'awaiting_scan' | 'connected' | 'error'>('disconnected');
+  const [status, setStatus] = useState<'disconnected' | 'loading' | 'awaiting_scan' | 'connected' | 'error'>('loading');
   const [qrCode, setQrCode] = useState<string | null>(null);
-  const socketRef = useRef<Socket | null>(null);
+  const [message, setMessage] = useState<string>('Carregando status...');
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
 
   useEffect(() => {
-    // Conectar ao servidor de Socket.IO
-    socketRef.current = io("http://localhost:3001"); // URL do seu backend
-    const socket = socketRef.current;
+    let isMounted = true;
 
-    socket.on('connect', () => {
-        console.log("Conectado ao servidor de sockets!");
-    });
+    const fetchStatus = async () => {
+      try {
+        // ALTERADO: a chamada de API agora usa `api.get`. 
+        // A URL é relativa à `baseURL` configurada no axios.ts.
+        // O header de autorização é adicionado automaticamente pelo interceptor.
+        const response = await api.get('/whatsapp/status', {
+          headers: {
+            Authorization: `Bearer ${user.token}`
+          }
+        });
+        
+        // Com Axios, os dados já vêm em `response.data`
+        const data = response.data;
 
-    socket.on('qr_code', (qr: string) => {
-      setQrCode(qr);
-      setStatus('awaiting_scan');
-    });
+        if (!isMounted) return;
 
-    socket.on('status', (newStatus: 'connected' | 'disconnected' | 'awaiting_scan') => {
-      setStatus(newStatus);
-      if(newStatus !== 'awaiting_scan') {
-        setQrCode(null);
+        setMessage(data.message || '');
+        switch (data.status) {
+          case 'READY':
+            setStatus('connected');
+            setQrCode(null);
+            break;
+          case 'SCAN_QR':
+            setStatus('awaiting_scan');
+            setQrCode(data.qrCode);
+            break;
+          case 'DISCONNECTED':
+            setStatus('disconnected');
+            setQrCode(null);
+            break;
+          case 'INITIALIZING':
+            setStatus('loading');
+            setQrCode(null);
+            break;
+          default:
+            setStatus('error');
+            setQrCode(null);
+            break;
+        }
+      } catch (error) {
+        // Axios automaticamente rejeita a promise para status de erro (4xx, 5xx)
+        console.error("Erro ao buscar status:", error);
+        if (isMounted) {
+            setStatus('error');
+            setMessage('Não foi possível conectar ao servidor da API.');
+        }
       }
-    });
-    
-    socket.on('connect_error', () => {
-        setStatus('error');
-    });
+    };
+
+    fetchStatus();
+    const intervalId = setInterval(fetchStatus, 3000);
 
     return () => {
-      socket.disconnect();
+      isMounted = false;
+      clearInterval(intervalId);
     };
-  }, []);
+  }, [user]);
 
-  const handleConnect = () => {
-    setStatus('loading_qr');
-    socketRef.current?.emit('initialize');
+  // ALTERADO: usa `api.post`
+  const handleConnect = async () => {
+    setStatus('loading');
+    setMessage('Iniciando conexão...');
+    try {
+      await api.post('/whatsapp/reconnect', {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao reconectar:", error);
+      setStatus('error');
+    }
   };
 
-  const handleDisconnect = () => {
-    socketRef.current?.emit('disconnect_wa');
-    setStatus('disconnected');
-    setQrCode(null);
+  // ALTERADO: usa `api.post`
+  const handleDisconnect = async () => {
+    setStatus('loading');
+    setMessage('Desconectando...');
+    try {
+      await api.post('/whatsapp/logout', {
+        headers: {
+          Authorization: `Bearer ${user.token}`
+        }
+      });
+    } catch (error) {
+      console.error("Erro ao desconectar:", error);
+      setStatus('error');
+    }
   };
 
   const renderStatus = () => {
     switch (status) {
-        case 'connected': return <><FaCheckCircle /> Conectado</>;
-        case 'disconnected': return <><FaTimesCircle /> Desconectado</>;
-        case 'loading_qr': return <>Carregando QR Code...</>;
-        case 'awaiting_scan': return <><FaQrcode /> Aguardando leitura do QR Code...</>;
-        case 'error': return <><FaTimesCircle /> Erro de conexão com o servidor</>;
-        default: return <><FaTimesCircle /> Desconhecido</>;
+      case 'connected': return <><FaCheckCircle /> Conectado</>;
+      case 'disconnected': return <><FaTimesCircle /> Desconectado</>;
+      case 'loading': return <>Processando...</>;
+      case 'awaiting_scan': return <><FaQrcode /> Aguardando leitura do QR Code...</>;
+      case 'error': return <><FaTimesCircle /> Erro de conexão</>;
+      default: return <><FaTimesCircle /> Desconhecido</>;
     }
   }
 
@@ -117,13 +174,14 @@ const WhatsAppSettings: React.FC = () => {
       <Status $status={status}>
         {renderStatus()}
       </Status>
+      <p>{message}</p>
       
       <ActionContainer>
-        {status === 'disconnected' && <Button primary onClick={handleConnect}>Conectar</Button>}
+        {(status === 'disconnected' || status === 'error') && <Button primary onClick={handleConnect}>Conectar</Button>}
         {status === 'connected' && <Button danger onClick={handleDisconnect}>Desconectar</Button>}
       </ActionContainer>
 
-      {status === 'loading_qr' && <ActivityIndicator />}
+      {status === 'loading' && <ActivityIndicator />}
       
       {status === 'awaiting_scan' && qrCode && (
         <QrCodeContainer>
@@ -131,7 +189,6 @@ const WhatsAppSettings: React.FC = () => {
         </QrCodeContainer>
       )}
 
-      {status === 'error' && <p>Não foi possível conectar ao serviço de WhatsApp. Verifique se o servidor está rodando.</p>}
     </SettingsCard>
   );
 };

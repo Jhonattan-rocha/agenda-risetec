@@ -204,7 +204,6 @@ const CalendarScreen: React.FC = () => {
       return (
         <MonthView
           days={daysWithTasks}
-          tasks={tasks}
           onDayClick={handleOpenCreateTaskModal} // Abre modal de criação
           onTaskClick={handleOpenEditTaskModal}  // Abre modal de edição
         />
