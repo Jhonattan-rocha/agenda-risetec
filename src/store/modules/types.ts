@@ -1,3 +1,5 @@
+import type { Profile } from "../../types";
+
 export const LOGIN_REQUEST: string = "LOGIN_REQUEST";
 export const LOGIN_SUCCESS: string = "LOGIN_SUCCESS";
 export const LOGIN_FALURE: string = "LOGIN_FALURE";
@@ -8,7 +10,8 @@ export interface AuthState {
     token: string,
     user: {
         username: string,
-        id: number
+        id: number,
+        profile: Profile | null
     }
 }
 
@@ -26,11 +29,12 @@ export interface SuccessProps {
 }
 
 export interface LoggedActionProps extends ActionProps {
-    payload?: { token: string, email: string, id: number }
+    payload?: { token: string, email: string, id: number, profile: Profile }
 }
 
 export interface LoggedPayloadProps {
     token: string; 
     email: string;
     id: number;
+    profile: Profile;
 }

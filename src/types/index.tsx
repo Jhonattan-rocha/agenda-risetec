@@ -31,10 +31,19 @@ export interface DayInfo {
   tasks: Task[];
 }
 
+export interface Permission {
+  id: string; 
+  entity_name: string; 
+  can_view: boolean; 
+  can_delete: boolean; 
+  can_update: boolean; 
+  can_create: boolean;
+}
+
 export interface Profile {
   id: string;
   name: string;
-  permissions: Array<{id: string; entity_name: string; can_view: boolean; can_delete: boolean; can_update: boolean; can_create: boolean;}>
+  permissions: Array<Permission>
 }
 
 // MODIFICADO: O usuário agora tem uma URL de avatar.

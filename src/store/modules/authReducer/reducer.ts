@@ -6,7 +6,8 @@ const initialState = {
     token: "",
     user: {
         email: "",
-        id: -1
+        id: -1,
+        profile: {}
     }, 
 }
 // caso precise de mais de um reducer, usar a função combineReducer
@@ -18,7 +19,8 @@ export default function recuder(state = initialState, action: type.LoggedActionP
                 const newState = {...state};
                 newState.user = {
                     email: action.payload.email,
-                    id: action.payload.id
+                    id: action.payload.id,
+                    profile: action.payload.profile
                 };
                 newState.token = action.payload.token;
                 newState.isLoggedIn = true;
