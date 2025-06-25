@@ -112,12 +112,12 @@ const ProfileManagement: React.FC = () => {
   const [selectedProfile, setSelectedProfile] = useState<Partial<Profile> | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
-
+  
   const fetchProfiles = useCallback(async () => {
     setIsLoading(true);
     try {
       // Você precisará criar este endpoint na sua API
-      const response = await api.get('/profiles', {
+      const response = await api.get('/user_profile', {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       setProfiles(response.data);
@@ -127,7 +127,7 @@ const ProfileManagement: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user.token]);
+  }, [user]);
 
   useEffect(() => {
     fetchProfiles();
@@ -203,7 +203,7 @@ const ProfileManagement: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      await api.delete(`/profiles/${selectedProfile.id}`, {
+      await api.delete(`/user_profile/${selectedProfile.id}`, {
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert("Perfil excluído com sucesso!");

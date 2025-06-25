@@ -1,13 +1,17 @@
 // src/pages/Settings/index.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { theme } from '../../styles/theme';
 import SmtpSettings from '../../components/Settings/SmtpSettings';
 import WhatsAppSettings from '../../components/Settings/WhatsAppSettings';
 import ProfileSettings from '../../components/Settings/ProfileSettings';
 import AppearanceSettings from '../../components/Settings/AppearanceSettings';
-import { FaUser, FaPalette, FaShareAlt } from 'react-icons/fa';
+import { FaUser, FaPalette, FaShareAlt, FaFacebookMessenger, FaUserAlt, FaCalendar } from 'react-icons/fa';
+import ProfileManagement from '../../components/Settings/ProfileSettings';
+import UserManagement from '../../components/Settings/UserManagement';
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
 
 const SettingsLayout = styled.div`
   display: flex;
@@ -87,31 +91,30 @@ const BackLink = styled(Link)`
   color: ${theme.colors.primary};
 `;
 
-type Tab = 'profile' | 'appearance' | 'integrations' | 'notifications';
+type Tab = 'profile' | 'user_profiles' | 'users' | 'calendar_profiles' | 'appearance' | 'integrations' | 'whatsapp';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
+  const navigate = useNavigate();
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'profile':
-        return <ProfileSettings />;
-      case 'appearance':
-        return <AppearanceSettings />;
-      case 'integrations':
-        return (
-          <>
-            <SmtpSettings />
-            <WhatsAppSettings />
-          </>
-        );
-      // Adicione a seção de Notificações quando o componente for criado
-      // case 'notifications':
-      //   return <NotificationSettings />;
-      default:
-        return <ProfileSettings />;
+      case 'profile':         return <ProfileSettings />;
+      case 'user_profiles':   return <ProfileManagement />; // O que criamos antes
+      case 'users':           return <UserManagement />; // O novo
+      case 'appearance':      return <AppearanceSettings />;
+      case 'integrations':    return <SmtpSettings />; // Simplificado
+      case 'whatsapp':        return <WhatsAppSettings />;
+      default:                return <ProfileSettings />;
     }
   };
+
+  useEffect(() => {
+    if(!user?.isLoggedIn){
+      navigate("/login");
+    }
+  }, [navigate, user]);
 
   return (
     <>
@@ -130,9 +133,18 @@ const SettingsPage: React.FC = () => {
           <NavItem $isActive={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>
             <FaShareAlt /> Integrações
           </NavItem>
-          {/* <NavItem $isActive={activeTab === 'notifications'} onClick={() => setActiveTab('notifications')}>
-            <FaPaperPlane /> Notificações
-          </NavItem> */}
+          <NavItem $isActive={activeTab === 'whatsapp'} onClick={() => setActiveTab('whatsapp')}>
+            <FaFacebookMessenger /> Whatsapp
+          </NavItem>
+          <NavItem $isActive={activeTab === 'user_profiles'} onClick={() => setActiveTab('user_profiles')}>
+            <FaUserAlt /> Usuário/Profile
+          </NavItem>
+          <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
+            <FaUser /> Usuarios
+          </NavItem>
+          <NavItem $isActive={activeTab === 'calendar_profiles'} onClick={() => setActiveTab('calendar_profiles')}>
+            <FaCalendar /> Calendarios
+          </NavItem>
         </SettingsNav>
         <SettingsContent>
           {renderContent()}
