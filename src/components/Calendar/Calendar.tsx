@@ -9,7 +9,6 @@ import ViewModeSelector from './ViewModeSelector';
 import MonthView from './MonthView';
 import TaskViewByDate from './TaskViewByDate';
 import RightSidebar from '../RightSidebar/RightSideBar';
-import { theme } from '../../styles/theme';
 import TaskModal from '../TaskModal';
 import api from '../../services/axios';
 import CalendarModal from '../CalendarModal';
@@ -21,20 +20,20 @@ const CalendarContainer = styled.div`
   display: flex;
   flex-grow: 1;
   height: 100vh;
-  background-color: ${theme.colors.background};
-  font-family: ${theme.fonts.body};
+  background-color: ${({ theme }) => theme.colors.background};
+  font-family: ${({ theme }) => theme.fonts.body};
 `;
 
 const MainContent = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: ${theme.spacing.lg};
+  padding: ${({ theme }) => theme.spacing.lg};
   max-height: 100vh;
   overflow: hidden;
 
   @media (max-width: 900px) {
-    padding: ${theme.spacing.md};
+    padding: ${({ theme }) => theme.spacing.md};
   }
 `;
 
@@ -42,18 +41,18 @@ const CalendarBody = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  background-color: ${theme.colors.surface};
-  border-bottom-left-radius: ${theme.borderRadius};
-  border-bottom-right-radius: ${theme.borderRadius};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-bottom-left-radius: ${({ theme }) => theme.borderRadius};
+  border-bottom-right-radius: ${({ theme }) => theme.borderRadius};
   overflow: hidden; // Ensures content respects border radius
-  box-shadow: ${theme.boxShadow};
+  box-shadow: ${({ theme }) => theme.boxShadow};
   position: relative; // For positioning loading/empty states
 `;
 
 const ViewWrapper = styled.div`
   flex-grow: 1;
   overflow-y: auto; // Allow internal scrolling for views like task list
-  padding: ${theme.spacing.md}; // Inner padding for the view content
+  padding: ${({ theme }) => theme.spacing.md}; // Inner padding for the view content
   position: relative;
   & > * {
     height: 100%; // Make sure children take full height if needed

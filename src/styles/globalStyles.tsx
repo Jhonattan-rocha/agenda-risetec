@@ -1,6 +1,5 @@
 // src/styles/GlobalStyles.ts
 import { createGlobalStyle } from 'styled-components';
-import { theme } from './theme';
 
 export const GlobalStyles = createGlobalStyle`
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&family=Roboto:wght@300;400;500;700&display=swap');
@@ -12,25 +11,25 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   body {
-    font-family: ${theme.fonts.body};
+    font-family: ${({ theme }) => theme.fonts.body};
     line-height: 1.6;
-    color: ${theme.colors.textPrimary};
-    background-color: ${theme.colors.background};
+    color: ${({ theme }) => theme.colors.textPrimary};
+    background-color: ${({ theme }) => theme.colors.background};
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: ${theme.fonts.heading};
-    color: ${theme.colors.textPrimary};
-    margin-bottom: ${theme.spacing.md};
+    font-family: ${({ theme }) => theme.fonts.heading};
+    color: ${({ theme }) => theme.colors.textPrimary};
+    margin-bottom: ${({ theme }) => theme.spacing.md};
   }
 
   a {
     text-decoration: none;
-    color: ${theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
     &:hover {
-      color: ${theme.colors.primaryLight};
+      color: ${({ theme }) => theme.colors.primaryLight};
     }
   }
 
@@ -38,7 +37,7 @@ export const GlobalStyles = createGlobalStyle`
     cursor: pointer;
     border: none;
     background: none;
-    font-family: ${theme.fonts.body};
+    font-family: ${({ theme }) => theme.fonts.body};
   }
 
   ul {
@@ -52,15 +51,15 @@ export const GlobalStyles = createGlobalStyle`
   }
 
   ::-webkit-scrollbar-track {
-    background: ${theme.colors.background};
+    background: ${({ theme }) => theme.colors.background};
     border-radius: 10px;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: ${theme.colors.border};
+    background: ${({ theme }) => theme.colors.border};
     border-radius: 10px;
     &:hover {
-      background: ${theme.colors.textSecondary};
+      background: ${({ theme }) => theme.colors.textSecondary};
     }
   }
 `;

@@ -3,7 +3,6 @@ import React from 'react';
 import styled from 'styled-components';
 import { format } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
-import { theme } from '../../styles/theme';
 import { Card } from '../Common';
 
 interface MonthViewProps {
@@ -16,20 +15,20 @@ const MonthGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background-color: ${theme.colors.border}; // Grid lines
-  border-radius: ${theme.borderRadius};
+  background-color: ${({ theme }) => theme.colors.border}; // Grid lines
+  border-radius: ${({ theme }) => theme.borderRadius};
   overflow: hidden; // Ensures corners are rounded
 
   .weekdays-header {
     display: contents; // Makes children act as direct grid items
     span {
-      background-color: ${theme.colors.surface};
-      padding: ${theme.spacing.sm};
+      background-color: ${({ theme }) => theme.colors.surface};
+      padding: ${({ theme }) => theme.spacing.sm};
       text-align: center;
       font-weight: 600;
-      color: ${theme.colors.primary};
+      color: ${({ theme }) => theme.colors.primary};
       font-size: 0.9rem;
-      border-bottom: 1px solid ${theme.colors.border};
+      border-bottom: 1px solid ${({ theme }) => theme.colors.border};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -40,33 +39,33 @@ const MonthGrid = styled.div`
 const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $hasTasks: boolean; }>`
   min-height: 120px; // A bit more space for tasks
   height: auto;
-  background-color: ${props => props.$isCurrentMonth ? theme.colors.surface : theme.colors.background};
-  color: ${props => props.$isCurrentMonth ? theme.colors.textPrimary : theme.colors.textSecondary};
-  padding: ${theme.spacing.xs};
+  background-color: ${props => props.$isCurrentMonth ? props.theme.colors.surface : props.theme.colors.background};
+  color: ${props => props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary};
+  padding: ${({ theme }) => theme.spacing.xs};
   cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   transition: background-color 0.2s ease, transform 0.1s ease;
-  border: ${props => props.$isToday ? `2px solid ${theme.colors.primary}` : `1px solid ${theme.colors.border}`};
+  border: ${props => props.$isToday ? `2px solid ${props.theme.colors.primary}` : `1px solid ${props.theme.colors.border}`};
   box-shadow: none; // Reset card default shadow for grid cells
   position: relative;
   overflow: hidden; // Hide overflow for task list
 
   &:hover {
-    background-color: ${theme.colors.primary}08; // Light overlay on hover
+    background-color: ${({ theme }) => theme.colors.primary}08; // Light overlay on hover
     transform: translateY(-2px);
-    box-shadow: ${theme.boxShadow};
+    box-shadow: ${({ theme }) => theme.boxShadow};
     z-index: 1; // Bring hovered cell to front
   }
 
   .day-number {
     font-size: 1.2rem;
     font-weight: ${props => props.$isToday ? 'bold' : 'normal'};
-    color: ${props => props.$isToday ? theme.colors.primary : (props.$isCurrentMonth ? theme.colors.textPrimary : theme.colors.textSecondary)};
+    color: ${props => props.$isToday ? props.theme.colors.primary : (props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary)};
     width: 100%;
     text-align: right;
-    padding: ${theme.spacing.xs};
+    padding: ${({ theme }) => theme.spacing.xs};
     span {
       display: inline-block;
       width: 28px;
@@ -83,8 +82,8 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
     overflow-y: hidden; // Prevent individual cell scroll in month view
     .more-tasks {
         font-size: 0.7rem;
-        color: ${theme.colors.textSecondary};
-        margin-top: ${theme.spacing.xs};
+        color: ${({ theme }) => theme.colors.textSecondary};
+        margin-top: ${({ theme }) => theme.spacing.xs};
         text-align: center;
         width: 100%;
     }
@@ -118,7 +117,7 @@ const TaskItem = styled.div<{ $color: string }>`
   overflow: hidden;
   text-overflow: ellipsis;
   background-color: ${props => props.$color}20;
-  color: ${theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   border-left: 3px solid ${props => props.$color};
 `;
 
@@ -177,7 +176,7 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
               {displayedTasks.map(task => (
                 <TaskItem
                   key={task.id}
-                  $color={task.color || theme.colors.primary}
+                  $color={String(task.color)}
                   onClick={(e) => {
                     e.stopPropagation();
                     onTaskClick(task);

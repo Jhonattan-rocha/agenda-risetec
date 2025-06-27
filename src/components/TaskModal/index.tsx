@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../Common';
 import type { Calendar, Task, User } from '../../types';
-import { theme } from '../../styles/theme';
 import { format, parseISO } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector } from 'react-redux';
@@ -348,7 +347,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
                 <Button outline onClick={onClose}>
                   Cancelar
                 </Button>
-                <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
+                <Button primary onClick={handleSave}>
                   {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
                 </Button>
               </>

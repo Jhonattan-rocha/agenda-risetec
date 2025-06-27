@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Card } from '../Common';
-import { theme } from '../../styles/theme';
 import type { Calendar } from '../../types';
 import type { AuthState } from '../../store/modules/types';
 import { useSelector } from 'react-redux';
@@ -37,9 +36,9 @@ const ModalOverlay = styled.div<{ $isOpen: boolean }>`
 `;
 
 const ModalContent = styled(Card)<{ $isOpen: boolean }>`
-  background-color: ${theme.colors.surface};
-  padding: ${theme.spacing.lg};
-  border-radius: ${theme.borderRadius};
+  background-color: ${({ theme }) => theme.colors.surface};
+  padding: ${({ theme }) => theme.spacing.lg};
+  border-radius: ${({ theme }) => theme.borderRadius};
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
@@ -58,20 +57,20 @@ const ModalHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: ${theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
   h2 {
     margin: 0;
     font-size: 1.5rem;
-    color: ${theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.textPrimary};
   }
   button {
     background: none;
     border: none;
     font-size: 1.8rem;
-    color: ${theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
     cursor: pointer;
     &:hover {
-      color: ${theme.colors.primary};
+      color: ${({ theme }) => theme.colors.primary};
     }
   }
 `;
@@ -79,40 +78,40 @@ const ModalHeader = styled.div`
 const ModalBody = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: ${theme.spacing.sm};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
 `;
 
 const Label = styled.label`
   font-size: 0.9rem;
-  color: ${theme.colors.textSecondary};
-  margin-bottom: ${theme.spacing.xs};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
   font-weight: 500;
 `;
 
 const Input = styled.input`
-  padding: ${theme.spacing.sm};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius};
+  padding: ${({ theme }) => theme.spacing.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius};
   font-size: 1rem;
-  background-color: ${theme.colors.background};
-  color: ${theme.colors.textPrimary};
+  background-color: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.textPrimary};
   transition: border-color 0.2s ease;
   &:focus {
     outline: none;
-    border-color: ${theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
 const CheckboxGroup = styled.div`
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.sm};
   label {
     margin-bottom: 0;
   }
@@ -120,7 +119,7 @@ const CheckboxGroup = styled.div`
 
 const ColorPickerContainer = styled.div`
   display: flex;
-  gap: ${theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.sm};
   flex-wrap: wrap;
 `;
 
@@ -130,8 +129,8 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
   border-radius: 50%;
   background-color: ${props => props.$color};
   cursor: pointer;
-  border: 2px solid ${props => props.$isSelected ? theme.colors.primary : 'transparent'};
-  box-shadow: ${props => props.$isSelected ? `0 0 0 2px ${theme.colors.primaryLight}` : 'none'};
+  border: 2px solid ${props => props.$isSelected ? props.theme.colors.primary : 'transparent'};
+  box-shadow: ${props => props.$isSelected ? `0 0 0 2px ${props.theme.colors.primaryLight}` : 'none'};
   transition: all 0.2s ease-in-out;
   transform: ${props => props.$isSelected ? 'scale(1.1)': '' };
 
@@ -147,8 +146,8 @@ const predefinedColors = [
 const ModalFooter = styled.div<{ $isEditing: boolean }>`
   display: flex;
   justify-content: flex-end;
-  gap: ${theme.spacing.md};
-  margin-top: ${theme.spacing.lg};
+  gap: ${({ theme }) => theme.spacing.md};
+  margin-top: ${({ theme }) => theme.spacing.lg};
 
   ${props => props.$isEditing && `
     justify-content: space-between;
@@ -304,7 +303,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               <Button outline onClick={onClose}>
                 Cancelar
               </Button>
-              <Button primary onClick={handleSave} style={{ marginLeft: theme.spacing.md }}>
+              <Button primary onClick={handleSave}>
                 {isEditing ? 'Salvar Alterações' : 'Criar Calendário'}
               </Button>
             </div>

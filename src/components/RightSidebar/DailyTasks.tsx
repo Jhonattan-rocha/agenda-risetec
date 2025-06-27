@@ -5,7 +5,6 @@ import { Card } from '../Common';
 import type { Task } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { theme } from '../../styles/theme';
 
 interface DailyTasksProps {
   tasks: Task[];
@@ -13,24 +12,24 @@ interface DailyTasksProps {
 }
 
 const DailyTasksContainer = styled(Card)`
-  padding: ${theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.md};
   h3 {
     margin-top: 0;
     font-size: 1.1rem;
-    color: ${theme.colors.textPrimary};
+    color: ${({ theme }) => theme.colors.textPrimary};
   }
   .task-list {
     max-height: 300px;
     overflow-y: auto;
-    padding-right: ${theme.spacing.xs}; // For scrollbar
+    padding-right: ${({ theme }) => theme.spacing.xs}; // For scrollbar
   }
 `;
 
 const TaskItemWrapper = styled.div<{ $color?: string }>`
   display: flex;
   align-items: center;
-  padding: ${theme.spacing.sm} 0;
-  border-bottom: 1px dashed ${theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.sm} 0;
+  border-bottom: 1px dashed ${({ theme }) => theme.colors.border};
   cursor: pointer;
   
   &:last-child {
@@ -40,8 +39,8 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background-color: ${props => props.$color || theme.colors.primary};
-    margin-right: ${theme.spacing.sm};
+    background-color: ${props => props.$color || props.theme.colors.primary};
+    margin-right: ${({ theme }) => theme.spacing.sm};
     flex-shrink: 0;
   }
   .task-details {
@@ -49,11 +48,11 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
     h4 {
       font-size: 0.95rem;
       margin: 0;
-      color: ${theme.colors.textPrimary};
+      color: ${({ theme }) => theme.colors.textPrimary};
     }
     p {
       font-size: 0.8rem;
-      color: ${theme.colors.textSecondary};
+      color: ${({ theme }) => theme.colors.textSecondary};
       margin: 0;
     }
   }
@@ -61,9 +60,9 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
 
 const NoTasksMessage = styled.p`
   font-size: 0.9rem;
-  color: ${theme.colors.textSecondary};
+  color: ${({ theme }) => theme.colors.textSecondary};
   text-align: center;
-  padding: ${theme.spacing.md} 0;
+  padding: ${({ theme }) => theme.spacing.md} 0;
 `;
 
 const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {

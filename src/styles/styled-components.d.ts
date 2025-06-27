@@ -1,10 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { CSSProp } from "styled-components";
-import Theme from './styles/theme';
+import { ThemeType } from './theme';
 import "styled-components";
 
-type ThemeType = typeof Theme;
 declare module "styled-components" {
   export interface DefaultTheme extends ThemeType {}
 }

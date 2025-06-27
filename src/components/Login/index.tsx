@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Button, Card } from '../Common';
-import { theme } from '../../styles/theme';
 import api from '../../services/axios';
 import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/modules/authReducer/actions';
@@ -15,61 +14,61 @@ const LoginPageContainer = styled.div`
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background-color: ${theme.colors.background};
+  background-color: ${({ theme }) => theme.colors.background};
 `;
 
 const LoginForm = styled(Card)`
-  padding: ${theme.spacing.xl};
+  padding: ${({ theme }) => theme.spacing.xl};
   width: 90%;
   max-width: 400px;
   text-align: center;
 
   h2 {
-    margin-bottom: ${theme.spacing.lg};
-    color: ${theme.colors.textPrimary};
+    margin-bottom: ${({ theme }) => theme.spacing.lg};
+    color: ${({ theme }) => theme.colors.textPrimary};
   }
 `;
 
 const FormGroup = styled.div`
   display: flex;
   flex-direction: column;
-  margin-bottom: ${theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.md};
   width: 100%;
 `;
 
 const Label = styled.label`
   font-size: 0.9rem;
-  color: ${theme.colors.textSecondary};
-  margin-bottom: ${theme.spacing.xs};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  margin-bottom: ${({ theme }) => theme.spacing.xs};
   text-align: left;
 `;
 
 const Input = styled.input`
-  padding: ${theme.spacing.sm};
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius};
+  padding: ${({ theme }) => theme.spacing.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius};
   font-size: 1rem;
-  background-color: ${theme.colors.surface};
-  color: ${theme.colors.textPrimary};
+  background-color: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.textPrimary};
   transition: border-color 0.2s ease;
   &:focus {
     outline: none;
-    border-color: ${theme.colors.primary};
+    border-color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
 const LoginButton = styled(Button)`
   width: 100%;
-  padding: ${theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.md};
   font-size: 1.1rem;
   font-weight: 500;
-  margin-top: ${theme.spacing.lg};
+  margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
 const ErrorMessage = styled.p`
-  color: ${theme.colors.error};
+  color: ${({ theme }) => theme.colors.error};
   font-size: 0.85rem;
-  margin-top: ${theme.spacing.sm};
+  margin-top: ${({ theme }) => theme.spacing.sm};
 `;
 
 const LoginPage: React.FC = () => {

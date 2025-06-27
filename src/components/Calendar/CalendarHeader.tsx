@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '../Common';
-import { theme } from '../../styles/theme';
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -18,36 +17,36 @@ const HeaderContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: ${theme.spacing.md} ${theme.spacing.lg};
-  background-color: ${theme.colors.surface};
-  border-bottom: 1px solid ${theme.colors.border};
-  border-top-left-radius: ${theme.borderRadius};
-  border-top-right-radius: ${theme.borderRadius};
+  padding: ${({ theme }) => theme.spacing.md} ${({ theme }) => theme.spacing.lg};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
+  border-top-left-radius: ${({ theme }) => theme.borderRadius};
+  border-top-right-radius: ${({ theme }) => theme.borderRadius};
 
   @media (max-width: 768px) {
     flex-wrap: wrap;
     justify-content: center;
-    gap: ${theme.spacing.sm};
-    padding: ${theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.sm};
+    padding: ${({ theme }) => theme.spacing.md};
   }
 `;
 
 const Title = styled.h2`
   margin: 0;
   font-size: 1.5rem;
-  color: ${theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   font-weight: 600;
 
   @media (max-width: 768px) {
     width: 100%;
     text-align: center;
-    margin-bottom: ${theme.spacing.sm};
+    margin-bottom: ${({ theme }) => theme.spacing.sm};
   }
 `;
 
 const NavButtons = styled.div`
   display: flex;
-  gap: ${theme.spacing.sm};
+  gap: ${({ theme }) => theme.spacing.sm};
 
   ${Button} {
     font-size: 1.2rem;
@@ -72,13 +71,13 @@ const NavButtons = styled.div`
 
 const TodayButton = styled(Button)`
   font-size: 0.9rem;
-  padding: ${theme.spacing.xs} ${theme.spacing.md};
-  border-radius: ${theme.borderRadius};
-  margin-left: ${theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  margin-left: ${({ theme }) => theme.spacing.md};
 
   @media (max-width: 768px) {
     margin-left: 0;
-    margin-top: ${theme.spacing.sm};
+    margin-top: ${({ theme }) => theme.spacing.sm};
     width: 100%;
   }
 `;

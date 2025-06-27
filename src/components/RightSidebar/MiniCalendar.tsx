@@ -13,7 +13,6 @@ import {
   isSameDay,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { theme } from '../../styles/theme';
 import { Card } from '../Common';
 
 interface MiniCalendarProps {
@@ -23,27 +22,27 @@ interface MiniCalendarProps {
 }
 
 const MiniCalendarContainer = styled(Card)`
-  padding: ${theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.md};
   min-width: 250px;
   .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: ${theme.spacing.sm};
+    margin-bottom: ${({ theme }) => theme.spacing.sm};
     h4 {
       margin: 0;
-      color: ${theme.colors.textPrimary};
+      color: ${({ theme }) => theme.colors.textPrimary};
       font-size: 1rem;
     }
     button {
       background: none;
       border: none;
       font-size: 1.2rem;
-      color: ${theme.colors.textSecondary};
+      color: ${({ theme }) => theme.colors.textSecondary};
       cursor: pointer;
-      transition: ${theme.transition};
+      transition: ${({ theme }) => theme.transition};
       &:hover {
-        color: ${theme.colors.primary};
+        color: ${({ theme }) => theme.colors.primary};
       }
     }
   }
@@ -52,11 +51,11 @@ const MiniCalendarContainer = styled(Card)`
     display: grid;
     grid-template-columns: repeat(7, 1fr);
     gap: 2px;
-    margin-bottom: ${theme.spacing.xs};
+    margin-bottom: ${({ theme }) => theme.spacing.xs};
     span {
       text-align: center;
       font-size: 0.75rem;
-      color: ${theme.colors.textSecondary};
+      color: ${({ theme }) => theme.colors.textSecondary};
       font-weight: 500;
     }
   }
@@ -75,18 +74,18 @@ const DayCell = styled.div<{ $isCurrentMonth: boolean; $isToday: boolean; $isSel
   align-items: center;
   justify-content: center;
   font-size: 0.8rem;
-  color: ${props => props.$isCurrentMonth ? theme.colors.textPrimary : theme.colors.textSecondary};
-  background-color: ${props => props.$isSelected ? theme.colors.primary : 'transparent'};
-  color: ${props => props.$isSelected ? theme.colors.surface : (props.$isCurrentMonth ? theme.colors.textPrimary : theme.colors.textSecondary)};
-  border-radius: ${theme.borderRadius};
+  color: ${props => props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary};
+  background-color: ${props => props.$isSelected ? props.theme.colors.primary : 'transparent'};
+  color: ${props => props.$isSelected ? props.theme.colors.surface : (props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary)};
+  border-radius: ${({ theme }) => theme.borderRadius};
   cursor: pointer;
-  transition: ${theme.transition};
+  transition: ${({ theme }) => theme.transition};
   font-weight: ${props => props.$isToday ? 'bold' : 'normal'};
-  border: ${props => props.$isToday ? `1px solid ${theme.colors.primary}` : 'none'};
+  border: ${props => props.$isToday ? `1px solid ${props.theme.colors.primary}` : 'none'};
 
   &:hover {
-    background-color: ${theme.colors.primary}1A;
-    ${props => props.$isSelected && `background-color: ${theme.colors.primaryLight};`}
+    background-color: ${({ theme }) => theme.colors.primary}1A;
+    ${props => props.$isSelected && `background-color: ${props.theme.colors.primaryLight};`}
   }
 `;
 

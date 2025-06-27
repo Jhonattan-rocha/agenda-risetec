@@ -1,7 +1,35 @@
-// src/styles/theme.ts
+export interface ThemeType {
+  colors: {
+    primary: string, // um roxo mais claro para contraste
+    primaryLight: string,
+    secondary: string, // amarelo
+    background: string, // cinza claro para o fundo
+    surface: string, // branco para cartões e elementos principais
+    textPrimary: string,
+    textSecondary: string,
+    border: string,
+    success: string,
+    warning: string,
+    error: string,
+    accent: string, // green
+  },
+  fonts: {
+    body: string,
+    heading: string,
+  },
+  spacing: {
+    xs: string,
+    sm: string,
+    md: string,
+    lg: string,
+    xl: string,
+  },
+  borderRadius: string,
+  boxShadow: string,
+  transition: string,
+}
 
-// Tema Claro (o que já temos, renomeado)
-export const lightTheme = {
+export const lightTheme: ThemeType = {
   colors: {
     primary: '#21a7ea', // um roxo mais claro para contraste
     primaryLight: '#30aceb',
@@ -32,8 +60,7 @@ export const lightTheme = {
   transition: 'all 0.3s ease-in-out',
 };
 
-// Tema Escuro (NOVO)
-export const darkTheme = {
+export const darkTheme: ThemeType = {
   colors: {
     primary: '#21a7ea', // um roxo mais claro para contraste
     primaryLight: '#30aceb',
@@ -63,7 +90,3 @@ export const darkTheme = {
   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.4)', // Sombra mais proeminente no modo escuro
   transition: 'all 0.3s ease-in-out',
 };
-
-export const theme = { ...darkTheme };
-
-export type Theme = typeof lightTheme | typeof darkTheme; // O tipo pode ser baseado em qualquer um dos temas

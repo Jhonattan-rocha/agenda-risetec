@@ -1,6 +1,5 @@
 // src/components/Common/Button.tsx
-import styled from 'styled-components';
-import { theme } from '../../styles/theme';
+import styled, { css } from 'styled-components';
 
 interface ButtonProps {
   primary?: boolean;
@@ -14,21 +13,21 @@ export const Button = styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: ${props => props.small ? `${theme.spacing.xs} ${theme.spacing.sm}` : `${theme.spacing.sm} ${theme.spacing.md}`};
-  border-radius: ${props => props.rounded ? '50px' : theme.borderRadius};
+  padding: ${props => props.small ? `${props.theme.spacing.xs} ${props.theme.spacing.sm}` : `${props.theme.spacing.sm} ${props.theme.spacing.md}`};
+  border-radius: ${props => props.rounded ? '50px' : props.theme.borderRadius};
   font-size: ${props => props.small ? '0.85rem' : '1rem'};
   font-weight: 500;
-  transition: ${theme.transition};
+  transition: ${({ theme }) => theme.transition};
   text-align: center;
   white-space: nowrap; // Prevent text wrapping
 
   ${props =>
     props.primary &&
-    `
-    background-color: ${theme.colors.primary};
-    color: ${theme.colors.surface};
+    css`
+    background-color: ${({ theme }) => theme.colors.primary};
+    color: ${({ theme }) => theme.colors.surface};
     &:hover {
-      background-color: ${theme.colors.primaryLight};
+      background-color: ${({ theme }) => theme.colors.primaryLight};
       transform: translateY(-2px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.1);
     }
@@ -40,12 +39,12 @@ export const Button = styled.button<ButtonProps>`
 
   ${props =>
     props.outline &&
-    `
+    css`
     background-color: transparent;
-    color: ${theme.colors.primary};
-    border: 1px solid ${theme.colors.primary};
+    color: ${({ theme }) => theme.colors.primary};
+    border: 1px solid ${({ theme }) => theme.colors.primary};
     &:hover {
-      background-color: ${theme.colors.primary}1A; // 10% opacity
+      background-color: ${({ theme }) => theme.colors.primary}1A; // 10% opacity
       transform: translateY(-2px);
       box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
@@ -57,11 +56,11 @@ export const Button = styled.button<ButtonProps>`
 
   ${props =>
     props.danger &&
-    `
-    background-color: ${theme.colors.error};
-    color: ${theme.colors.surface};
+    css`
+    background-color: ${({ theme }) => theme.colors.error};
+    color: ${({ theme }) => theme.colors.surface};
     &:hover {
-      background-color: ${theme.colors.error}E0;
+      background-color: ${({ theme }) => theme.colors.error}E0;
     }
   `}
 

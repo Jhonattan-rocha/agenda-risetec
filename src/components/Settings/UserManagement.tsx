@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../Common';
-import { theme } from '../../styles/theme';
 import type { Profile } from '../../types';
 import api from '../../services/axios';
 import { useSelector } from 'react-redux';
@@ -19,27 +18,27 @@ const Label = styled.label` display: block; margin-bottom: .5rem; font-weight: 5
 const Input = styled.input`
   width: 100%;
   padding: .75rem;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius};
   font-size: 1rem;
 `;
 const ProfileSelectorContainer = styled.div`
   max-height: 150px;
   overflow-y: auto;
-  border: 1px solid ${theme.colors.border};
-  border-radius: ${theme.borderRadius};
-  padding: ${theme.spacing.sm};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  padding: ${({ theme }) => theme.spacing.sm};
 `;
 const ProfileCheckboxItem = styled.div`
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.sm};
-  padding: ${theme.spacing.xs} 0;
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.xs} 0;
 `;
 const ActionFooter = styled.div`
   display: flex;
   justify-content: flex-end;
-  margin-top: ${theme.spacing.xl};
+  margin-top: ${({ theme }) => theme.spacing.xl};
 `;
 
 

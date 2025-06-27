@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../Common';
-import { theme } from '../../styles/theme';
 import type { Profile, Permission } from '../../types';
 import api from '../../services/axios';
 import { useSelector } from 'react-redux';
@@ -14,30 +13,30 @@ import { FaPlus } from 'react-icons/fa';
 
 const ProfileLayout = styled.div`
   display: flex;
-  gap: ${theme.spacing.lg};
+  gap: ${({ theme }) => theme.spacing.lg};
   min-height: 500px;
 `;
 
 const ProfileListContainer = styled(Card)`
   flex: 0 0 250px;
-  padding: ${theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.sm};
   h3 {
-    margin-top: ${theme.spacing.xs};
-    margin-bottom: ${theme.spacing.md};
-    padding: 0 ${theme.spacing.sm};
+    margin-top: ${({ theme }) => theme.spacing.xs};
+    margin-bottom: ${({ theme }) => theme.spacing.md};
+    padding: 0 ${({ theme }) => theme.spacing.sm};
   }
 `;
 
 const ProfileListItem = styled.div<{ $isActive: boolean }>`
-  padding: ${theme.spacing.sm} ${theme.spacing.md};
-  border-radius: ${theme.borderRadius};
+  padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+  border-radius: ${({ theme }) => theme.borderRadius};
   cursor: pointer;
   font-weight: 500;
-  color: ${({ $isActive }) => $isActive ? theme.colors.primary : theme.colors.textSecondary};
-  background-color: ${({ $isActive }) => $isActive ? `${theme.colors.primary}1A` : 'transparent'};
+  color: ${({ $isActive, theme }) => $isActive ? theme.colors.primary : theme.colors.textSecondary};
+  background-color: ${({ $isActive, theme }) => $isActive ? `${theme.colors.primary}1A` : 'transparent'};
   
   &:hover {
-    background-color: ${`${theme.colors.primary}1A`};
+    background-color: ${({ theme }) => `${theme.colors.primary}1A`};
   }
 `;
 
@@ -46,7 +45,7 @@ const ProfileFormContainer = styled(Card)`
 `;
 
 const FormGroup = styled.div`
-  margin-bottom: ${theme.spacing.lg};
+  margin-bottom: ${({ theme }) => theme.spacing.lg};
 `;
 
 const Label = styled.label`
@@ -58,10 +57,10 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: .75rem;
-  border: 1px solid ${theme.colors.border};
-  background-color: ${theme.colors.background};
-  color: ${theme.colors.textPrimary};
-  border-radius: ${theme.borderRadius};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.background};
+  color: ${({ theme }) => theme.colors.textPrimary};
+  border-radius: ${({ theme }) => theme.borderRadius};
   font-size: 1rem;
 `;
 
@@ -71,12 +70,12 @@ const PermissionsTable = styled.table`
   text-align: left;
   
   th, td {
-    padding: ${theme.spacing.sm};
-    border-bottom: 1px solid ${theme.colors.border};
+    padding: ${({ theme }) => theme.spacing.sm};
+    border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   }
   
   th {
-    color: ${theme.colors.textSecondary};
+    color: ${({ theme }) => theme.colors.textSecondary};
     font-size: 0.9rem;
   }
   
@@ -85,14 +84,14 @@ const PermissionsTable = styled.table`
   }
 
   tbody tr:hover {
-    background-color: ${theme.colors.background};
+    background-color: ${({ theme }) => theme.colors.background};
   }
 `;
 
 const ActionFooter = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-top: ${theme.spacing.xl};
+  margin-top: ${({ theme }) => theme.spacing.xl};
 `;
 
 

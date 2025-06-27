@@ -4,7 +4,6 @@ import styled from 'styled-components';
 import type { Task } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { theme } from '../../styles/theme';
 import { Card } from '../Common';
 import { formatTime } from '../../utils/dateUtils';
 
@@ -16,26 +15,26 @@ interface TaskViewByDateProps {
 const TaskViewContainer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: ${theme.spacing.md};
-  padding: ${theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.md};
+  padding: ${({ theme }) => theme.spacing.md};
   max-height: calc(100vh - 200px); // Adjust based on header height
   overflow-y: auto;
-  background-color: ${theme.colors.background};
-  border-radius: ${theme.borderRadius};
+  background-color: ${({ theme }) => theme.colors.background};
+  border-radius: ${({ theme }) => theme.borderRadius};
 `;
 
 const DateSection = styled(Card)`
-  padding: ${theme.spacing.md};
-  margin-bottom: ${theme.spacing.sm};
-  background-color: ${theme.colors.surface};
-  border-left: 5px solid ${theme.colors.primary};
+  padding: ${({ theme }) => theme.spacing.md};
+  margin-bottom: ${({ theme }) => theme.spacing.sm};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-left: 5px solid ${({ theme }) => theme.colors.primary};
   display: flex;
   flex-direction: column;
 `;
 
 const SectionHeader = styled.h3`
-  margin: 0 0 ${theme.spacing.sm} 0;
-  color: ${theme.colors.primary};
+  margin: 0 0 ${({ theme }) => theme.spacing.sm} 0;
+  color: ${({ theme }) => theme.colors.primary};
   font-size: 1.2rem;
   font-weight: 600;
 `;
@@ -43,8 +42,8 @@ const SectionHeader = styled.h3`
 const TaskItem = styled.div<{ $color?: string }>`
   display: flex;
   align-items: flex-start;
-  padding: ${theme.spacing.sm} 0;
-  border-bottom: 1px dashed ${theme.colors.border};
+  padding: ${({ theme }) => theme.spacing.sm} 0;
+  border-bottom: 1px dashed ${({ theme }) => theme.colors.border};
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 
@@ -60,8 +59,8 @@ const TaskItem = styled.div<{ $color?: string }>`
   .color-indicator {
     width: 6px;
     height: 100%; // Takes full height of item
-    background-color: ${props => props.$color || theme.colors.primary};
-    margin-right: ${theme.spacing.sm};
+    background-color: ${props => props.$color || props.theme.colors.primary};
+    margin-right: ${({ theme }) => theme.spacing.sm};
     border-radius: 3px;
     flex-shrink: 0;
   }
@@ -69,28 +68,28 @@ const TaskItem = styled.div<{ $color?: string }>`
   .task-content {
     flex-grow: 1;
     h4 {
-      margin: 0 0 ${theme.spacing.xs} 0;
+      margin: 0 0 ${({ theme }) => theme.spacing.xs} 0;
       font-size: 1rem;
-      color: ${theme.colors.textPrimary};
+      color: ${({ theme }) => theme.colors.textPrimary};
     }
     p {
       margin: 0;
       font-size: 0.85rem;
-      color: ${theme.colors.textSecondary};
+      color: ${({ theme }) => theme.colors.textSecondary};
     }
     span {
         font-size: 0.8rem;
-        color: ${theme.colors.textPrimary};
+        color: ${({ theme }) => theme.colors.textPrimary};
         font-weight: 500;
-        margin-right: ${theme.spacing.xs};
+        margin-right: ${({ theme }) => theme.spacing.xs};
     }
   }
 `;
 
 const NoTasksMessage = styled.p`
   text-align: center;
-  color: ${theme.colors.textSecondary};
-  padding: ${theme.spacing.lg};
+  color: ${({ theme }) => theme.colors.textSecondary};
+  padding: ${({ theme }) => theme.spacing.lg};
 `;
 
 const TaskViewByDate: React.FC<TaskViewByDateProps> = ({ tasks, onTaskClick }) => {

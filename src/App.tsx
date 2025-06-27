@@ -1,5 +1,5 @@
 // src/App.tsx
-import { ThemeProvider } from './contexts/ThemeContext';
+import { ThemeProvider } from 'styled-components';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { BrowserRouter, Link, Route, Routes, useNavigate } from 'react-router-dom';
@@ -9,15 +9,18 @@ import store, { persistor } from './store';
 import LoginPage from './components/Login';
 import SettingsPage from './pages/Settings';
 import { FaCog, FaSignOutAlt, FaUserCircle } from 'react-icons/fa';
-import { useState } from 'react';
-import { type AuthState } from './store/modules/types';
+import { useEffect, useMemo, useState } from 'react';
+import type { AuthState } from './store/modules/types';
 import * as authActions from './store/modules/authReducer/actions';
-import { theme } from './styles/theme';
+import { darkTheme, lightTheme } from './styles/theme';
+import { GlobalStyles } from './styles/globalStyles';
+import { ThemeContext } from './utils/contexts';
+
 
 const AppHeader = styled.header`
   padding: 10px 20px;
-  background-color: ${theme.colors.surface};
-  border-bottom: 1px solid ${theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
   justify-content: flex-end;
   align-items: center;
@@ -34,7 +37,7 @@ const UserAvatarButton = styled.button`
   display: flex;
   align-items: center;
   gap: 10px;
-  color: ${theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   font-weight: 500;
   cursor: pointer;
   background: transparent;
@@ -45,10 +48,10 @@ const DropdownMenu = styled.div<{ $isOpen: boolean }>`
   position: absolute;
   top: 120%;
   right: 0;
-  background-color: ${theme.colors.surface};
-  border-radius: ${theme.borderRadius};
-  box-shadow: ${theme.boxShadow};
-  border: 1px solid ${theme.colors.border};
+  background-color: ${({ theme }) => theme.colors.surface};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  box-shadow: ${({ theme }) => theme.boxShadow};
+  border: 1px solid ${({ theme }) => theme.colors.border};
   width: 200px;
   overflow: hidden;
   display: ${({ $isOpen }) => ($isOpen ? 'block' : 'none')};
@@ -60,11 +63,11 @@ const DropdownItem = styled(Link)`
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  color: ${theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   transition: all 0.2s ease;
   &:hover {
-    background-color: ${theme.colors.background};
-    color: ${theme.colors.primary};
+    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -73,16 +76,15 @@ const LogoutButton = styled.button`
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  color: ${theme.colors.textPrimary};
+  color: ${({ theme }) => theme.colors.textPrimary};
   transition: all 0.2s ease;
   width: 100%;
   text-align: left;
   &:hover {
-    background-color: ${theme.colors.background};
-    color: ${theme.colors.error};
+    background-color: ${({ theme }) => theme.colors.background};
+    color: ${({ theme }) => theme.colors.error};
   }
 `;
-
 
 const AppContent: React.FC = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -116,24 +118,49 @@ const AppContent: React.FC = () => {
       <CalendarScreen />
     </>
   );
-}
+};
+
+const AppRoutes = () => (
+  <Routes>
+    <Route path='/' element={<AppContent />} />
+    <Route path='/login' element={<LoginPage />} />
+    <Route path='/settings' element={<SettingsPage />} />
+  </Routes>
+);
 
 const App: React.FC = () => {
+  const [themeName, setThemeName] = useState<'dark' | 'light'>(() => {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+      return 'light';
+    }
+    return 'dark'; // Padrão para o tema escuro
+  });
+
+  useEffect(() => {
+    localStorage.setItem('theme', themeName);
+  }, [themeName]);
+
+  const toggleTheme = () => {
+    setThemeName(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  const theme = useMemo(() => (themeName === 'light' ? lightTheme : darkTheme), [themeName]);
+
   return (
     <Provider store={store}>
       <PersistGate persistor={persistor}>
-        <BrowserRouter>
-          <ThemeProvider>
-            <Routes>
-              <Route path='/' element={<AppContent />} />
-              <Route path='/login' element={<LoginPage />} />
-              <Route path='/settings' element={<SettingsPage />} />
-            </Routes>
-          </ThemeProvider>
-        </BrowserRouter>
+        <ThemeContext.Provider value={{ theme, toggleTheme }}>
+          <BrowserRouter>
+            <ThemeProvider theme={theme}>
+              <GlobalStyles />
+              <AppRoutes />
+            </ThemeProvider>
+          </BrowserRouter>
+        </ThemeContext.Provider>
       </PersistGate>
     </Provider>
   );
-}
+};
 
 export default App;

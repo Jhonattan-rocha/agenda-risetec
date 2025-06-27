@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../Common';
-import { theme } from '../../styles/theme';
 import { QRCodeCanvas } from 'qrcode.react';
 import ActivityIndicator from '../ActivityIndicator';
 import { FaCheckCircle, FaTimesCircle, FaQrcode } from 'react-icons/fa';
@@ -14,22 +13,22 @@ import type { AuthState } from '../../store/modules/types';
 // --- ESTILOS (Sem alterações) ---
 const SettingsCard = styled(Card)`
   h2 { margin-top: 0; }
-  margin-top: ${theme.spacing.lg};
+  margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
 const Status = styled.div<{ $status: string }>`
   display: flex;
   align-items: center;
-  gap: ${theme.spacing.sm};
-  padding: ${theme.spacing.sm};
-  border-radius: ${theme.borderRadius};
+  gap: ${({ theme }) => theme.spacing.sm};
+  padding: ${({ theme }) => theme.spacing.sm};
+  border-radius: ${({ theme }) => theme.borderRadius};
   margin: 1rem 0;
-  color: ${({ $status }) => {
+  color: ${({ $status, theme }) => {
     if ($status === 'connected') return theme.colors.success;
     if ($status === 'disconnected' || $status === 'error') return theme.colors.error;
     return theme.colors.textSecondary;
   }};
-  background-color: ${({ $status }) => {
+  background-color: ${({ $status, theme }) => {
     if ($status === 'connected') return `${theme.colors.success}1A`;
     if ($status === 'disconnected' || $status === 'error') return `${theme.colors.error}1A`;
     return theme.colors.background;
@@ -45,15 +44,15 @@ const QrCodeContainer = styled.div`
   margin: 1.5rem auto;
   padding: 1rem;
   background-color: #fff;
-  border-radius: ${theme.borderRadius};
-  box-shadow: ${theme.boxShadow};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  box-shadow: ${({ theme }) => theme.boxShadow};
 `;
 
 const ActionContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: ${theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.md};
 `;
 
 const WhatsAppSettings: React.FC = () => {

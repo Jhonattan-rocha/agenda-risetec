@@ -22,7 +22,7 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-    "types": ["./src/styled-components.d.ts"]
+    "types": ["src/styled-components.d.ts"]
   },
   "include": ["src"]
 }

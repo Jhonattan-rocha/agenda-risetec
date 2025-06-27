@@ -1,7 +1,6 @@
 // src/components/Common/ToggleSwitch.tsx
 import React from 'react';
 import styled from 'styled-components';
-import { theme } from '../../styles/theme';
 
 const SwitchContainer = styled.label`
   position: relative;
@@ -23,7 +22,7 @@ const Slider = styled.span<{ isOn: boolean }>`
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: ${props => props.isOn ? theme.colors.primary : '#ccc'};
+  background-color: ${props => props.isOn ? props.theme.colors.primary : '#ccc'};
   transition: .4s;
   border-radius: 34px;
 
