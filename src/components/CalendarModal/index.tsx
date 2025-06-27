@@ -1,4 +1,4 @@
-// src/components/CalendarModal.tsx
+// src/components/CalendarModal/index.tsx
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Card } from '../Common';
@@ -11,7 +11,7 @@ import ActivityIndicator from '../ActivityIndicator';
 interface CalendarModalProps {
   isOpen: boolean;
   onClose: () => void;
-  calendar?: Calendar | null; // Calendário para edição/visualização. Null para criação.
+  calendar?: Calendar | null;
 }
 
 const ModalOverlay = styled.div<{ $isOpen: boolean }>`
@@ -25,14 +25,9 @@ const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   justify-content: center;
   align-items: center;
   z-index: 1000;
-  opacity: 0;
-  visibility: hidden;
+  opacity: ${props => (props.$isOpen ? 1 : 0)};
+  visibility: ${props => (props.$isOpen ? 'visible' : 'hidden')};
   transition: opacity 0.3s ease, visibility 0.3s ease;
-
-  ${props => props.$isOpen && `
-    opacity: 1;
-    visibility: visible;
-  `}
 `;
 
 const ModalContent = styled(Card)<{ $isOpen: boolean }>`
@@ -43,14 +38,9 @@ const ModalContent = styled(Card)<{ $isOpen: boolean }>`
   max-width: 500px;
   max-height: 90vh;
   overflow-y: auto;
-  transform: translateY(20px);
-  opacity: 0;
+  transform: ${props => (props.$isOpen ? 'translateY(0)' : 'translateY(20px)')};
+  opacity: ${props => (props.$isOpen ? 1 : 0)};
   transition: transform 0.3s ease, opacity 0.3s ease;
-
-  ${props => props.$isOpen && `
-    transform: translateY(0);
-    opacity: 1;
-  `}
 `;
 
 const ModalHeader = styled.div`
@@ -121,6 +111,7 @@ const ColorPickerContainer = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm};
   flex-wrap: wrap;
+  align-items: center; // Alinha o input de cor com as bolinhas
 `;
 
 const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
@@ -139,49 +130,60 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
   }
 `;
 
+// NOVO: Estilo para o input de cor customizada
+const CustomColorInput = styled.input.attrs({ type: 'color' })`
+  width: 36px;
+  height: 36px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  padding: 0;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+`;
+
 const predefinedColors = [
-  '#FFDDC1', '#D4E8D4', '#C7CEEA', '#F0E68C', '#AED6F1', '#FFC0CB', '#AFEEEE', '#E6E6FA', '#87CEEB', '#B0C4DE',
+  '#FFDDC1', '#D4E8D4', '#C7CEEA', '#F0E68C', '#AED6F1', '#FFC0CB', '#AFEEEE', '#E6E6FA',
 ];
 
 const ModalFooter = styled.div<{ $isEditing: boolean }>`
   display: flex;
-  justify-content: flex-end;
+  justify-content: ${props => props.$isEditing ? 'space-between' : 'flex-end'};
   gap: ${({ theme }) => theme.spacing.md};
   margin-top: ${({ theme }) => theme.spacing.lg};
-
-  ${props => props.$isEditing && `
-    justify-content: space-between;
-  `}
 `;
 
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar }) => {
-  const [currentCalendar, setCurrentCalendar] = useState<Calendar>({
+  const [currentCalendar, setCurrentCalendar] = useState<Partial<Calendar>>({
     name: '',
     color: predefinedColors[0],
     visible: true,
-    id: "",
-    tasks: []
   });
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  console.log(calendar);
+  
+  // NOVO: Verifica se a cor atual é uma das predefinidas
+  const isCustomColor = !predefinedColors.includes(currentCalendar.color || '');
+
   useEffect(() => {
     if (calendar) {
-      setCurrentCalendar({
-        name: calendar.name,
-        color: calendar.color,
-        visible: calendar.visible,
-        id: calendar.id,
-        tasks: calendar.tasks
-      });
+      setCurrentCalendar(calendar);
     } else {
       setCurrentCalendar({
         name: '',
         color: predefinedColors[0],
         visible: true,
-        id: '',
-        tasks: []
       });
     }
   }, [calendar]);
@@ -199,19 +201,16 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
       alert('O nome do calendário é obrigatório.');
       return;
     }
-    const calendarToSave = calendar?.id
-      ? { ...currentCalendar, id: calendar.id }
-      : currentCalendar;
+    
+    setIsLoading(true);
 
-    const req = isEditing ? api.put(`/calendar/${calendarToSave.id}`, {...calendarToSave}, {
-      headers: {
-        Authorization: `Bearer ${user.token}`
-      }
-    }) : api.post("/calendar", {...calendarToSave}, {
-      headers: {
-        Authorization: `Bearer ${user.token}`
-      }
-    })
+    const req = isEditing 
+      ? api.put(`/calendar/${calendar?.id}`, currentCalendar, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        })
+      : api.post("/calendar", currentCalendar, {
+          headers: { Authorization: `Bearer ${user.token}` }
+        });
     
     req.then(() => {
       setIsLoading(false);
@@ -220,16 +219,13 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
       console.log(err);
       setIsLoading(false);
     });
-    onClose();
   };
 
   const handleDelete = () => {
     if (calendar?.id && window.confirm('Tem certeza que deseja excluir este calendário?')) {
       setIsLoading(true);
       api.delete(`/calendar/${calendar.id}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
+        headers: { Authorization: `Bearer ${user.token}` }
       })
       .then(() => {
         setIsLoading(false);
@@ -239,7 +235,6 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
         setIsLoading(false);
         console.log(err);
       });
-      onClose();
     }
   };
 
@@ -258,7 +253,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
             <Input
               id="name"
               name="name"
-              value={currentCalendar.name}
+              value={currentCalendar.name || ''}
               onChange={handleChange}
               placeholder="Nome do calendário"
               required
@@ -275,6 +270,14 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
                   onClick={() => setCurrentCalendar(prev => ({ ...prev, color }))}
                 />
               ))}
+              {/* NOVO: Seletor de cor customizada */}
+              <ColorSwatch $color={isCustomColor ? currentCalendar.color! : '#ccc'} $isSelected={isCustomColor}>
+                  <CustomColorInput
+                      name="color"
+                      value={currentCalendar.color || '#ffffff'}
+                      onChange={handleChange}
+                  />
+              </ColorSwatch>
             </ColorPickerContainer>
           </FormGroup>
           <CheckboxGroup>
@@ -282,10 +285,8 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               id="visible"
               name="visible"
               type="checkbox"
-              checked={currentCalendar.visible ? currentCalendar.visible : false}
-              onChange={(e) => {
-                setCurrentCalendar({ ...currentCalendar, visible: e.target.checked });
-              }}
+              checked={currentCalendar.visible ?? false}
+              onChange={handleChange}
             />
             <Label htmlFor="visible">Visível</Label>
           </CheckboxGroup>

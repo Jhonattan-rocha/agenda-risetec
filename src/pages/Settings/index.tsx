@@ -6,7 +6,7 @@ import SmtpSettings from '../../components/Settings/SmtpSettings';
 import WhatsAppSettings from '../../components/Settings/WhatsAppSettings';
 import ProfileSettings from '../../components/Settings/ProfileSettings';
 import AppearanceSettings from '../../components/Settings/AppearanceSettings';
-import { FaUser, FaPalette, FaShareAlt, FaFacebookMessenger, FaUserAlt, FaCalendar } from 'react-icons/fa';
+import { FaUser, FaPalette, FaShareAlt, FaFacebookMessenger, FaUserAlt } from 'react-icons/fa';
 import ProfileManagement from '../../components/Settings/ProfileSettings';
 import UserManagement from '../../components/Settings/UserManagement';
 import { useSelector } from 'react-redux';
@@ -140,9 +140,6 @@ const SettingsPage: React.FC = () => {
           </NavItem>
           <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
             <FaUser /> Usuarios
-          </NavItem>
-          <NavItem $isActive={activeTab === 'calendar_profiles'} onClick={() => setActiveTab('calendar_profiles')}>
-            <FaCalendar /> Calendarios
           </NavItem>
         </SettingsNav>
         <SettingsContent>

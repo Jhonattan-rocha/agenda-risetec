@@ -1,4 +1,4 @@
-// src/components/TaskModal.tsx
+// src/components/TaskModal/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../Common';
 import type { Calendar, Task, User } from '../../types';
@@ -11,16 +11,39 @@ import ActivityIndicator from '../ActivityIndicator';
 import { CheckboxGroup, ColorPickerContainer, ColorSwatch, FormGroup, Input, Label, ModalBody, ModalContent, ModalFooter, ModalHeader, ModalOverlay, 
   Select, TextArea, TimeInputs, UserCheckboxItem, UserSelectorContainer
  } from './styled';
+import styled from 'styled-components'; // Importar styled
 
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
-  task?: Task | null; // Tarefa para edição/visualização. Null para criação.
-  initialDate?: Date; // Data inicial para nova tarefa
+  task?: Task | null;
+  initialDate?: Date;
 }
 
+// NOVO: Estilo para o input de cor customizada (copiado do modal de calendário)
+const CustomColorInput = styled.input.attrs({ type: 'color' })`
+  width: 36px;
+  height: 36px;
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  border-radius: 50%;
+  cursor: pointer;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-color: transparent;
+  padding: 0;
+
+  &::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  &::-webkit-color-swatch {
+    border: none;
+    border-radius: 50%;
+  }
+`;
+
 const predefinedColors = [
-  '#FFDDC1', '#D4E8D4', '#C7CEEA', '#F0E68C', '#AED6F1', '#FFC0CB', '#AFEEEE', '#E6E6FA', '#87CEEB', '#B0C4DE',
+  '#FFDDC1', '#D4E8D4', '#C7CEEA', '#F0E68C', '#AED6F1', '#FFC0CB', '#AFEEEE', '#E6E6FA',
 ];
 
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDate }) => {
@@ -41,13 +64,17 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const isEditing = !!task;
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
+  // NOVO: Verifica se a cor da tarefa é customizada
+  const isCustomColor = !predefinedColors.includes(currentTask.color || '');
+
   useEffect(() => {
     if (task) {
       setCurrentTask({
         ...task,
-        date: task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString()), // Ensure it's a Date object
+        date: task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString()),
         startTime: task.startTime || '',
         endTime: task.endTime || '',
+        users: task.users || [],
       });
     } else {
       setCurrentTask({
@@ -68,22 +95,21 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     setCurrentTask(prev => {
       const selectedUsers = prev.users || [];
       const userIndex = selectedUsers.findIndex(u => u.id === userId);
-      const user = users.find(u => u.id === userId);
+      const userToToggle = users.find(u => u.id === userId);
 
-      if (!user) return prev;
+      if (!userToToggle) return prev;
 
       if (userIndex > -1) {
-        // Remove usuário se já estiver selecionado
         return { ...prev, users: selectedUsers.filter(u => u.id !== userId) };
       } else {
-        // Adiciona usuário
-        return { ...prev, users: [...selectedUsers, user] };
+        return { ...prev, users: [...selectedUsers, userToToggle] };
       }
     });
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type, checked } = e.target as HTMLInputElement;
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
     setCurrentTask(prev => ({
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
@@ -96,17 +122,19 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dateString = e.target.value;
-    setCurrentTask(prev => ({ ...prev, date: new Date(dateString + 'T12:00:00') })); // Set to noon to avoid timezone issues
+    setCurrentTask(prev => ({ ...prev, date: new Date(dateString + 'T12:00:00') }));
   };
 
   const handleSave = () => {
-    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id || !currentTask.users) {
-      alert('Título, Data, Usuário e Calendario são obrigatórios.');
+    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id) {
+      alert('Título, Data e Calendário são obrigatórios.');
       return;
     }
     setIsLoading(true);
 
-    const newTask: Task = {
+    const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
+
+    const taskPayload = {
       id: currentTask.id || uuidv4(),
       title: currentTask.title,
       description: currentTask.description,
@@ -115,19 +143,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       startTime: currentTask.startTime,
       endTime: currentTask.endTime,
       color: currentTask.color,
-      calendar_id: String(currentTask.calendar_id),
-      users: currentTask.users ? currentTask.users : []
+      calendar_id: parseInt(String(currentTask.calendar_id), 10),
+      user_ids: user_ids,
     };
 
-    const req = isEditing ? api.put(`/event/${currentTask.id}`, {...newTask}, {
-      headers: {
-        Authorization: `Bearer ${user.token}`
-      }
-    }) : api.post("/event", {...newTask}, {
-      headers: {
-        Authorization: `Bearer ${user.token}`
-      }
-    })
+    const req = isEditing 
+      ? api.put(`/event/${taskPayload.id}`, taskPayload, { headers: { Authorization: `Bearer ${user.token}` }})
+      : api.post("/event", taskPayload, { headers: { Authorization: `Bearer ${user.token}` }});
     
     req.then(() => {
       setIsLoading(false);
@@ -141,11 +163,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const handleDelete = () => {
     if (task?.id && window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
       setIsLoading(true);
-      api.delete(`/event/${task.id}`, {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      })
+      api.delete(`/event/${task.id}`, { headers: { Authorization: `Bearer ${user.token}` }})
       .then(() => {
         setIsLoading(false);
         onClose();
@@ -156,45 +174,27 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       });
     }
   };
-
-  const fetchAllCalendars = useCallback(async () => {
-    try{
-      const req = await api.get("/calendar", {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
-      const calendars = req.data as Array<Calendar>;
-
-      setCalendars(calendars);
-    }catch(err){
-      console.log(err);
+  
+  const fetchAllData = useCallback(async () => {
+    try {
+        const [usersRes, calendarsRes] = await Promise.all([
+            api.get("/user", { headers: { Authorization: `Bearer ${user.token}` }}),
+            api.get("/calendar", { headers: { Authorization: `Bearer ${user.token}` }})
+        ]);
+        setUsers(usersRes.data as User[]);
+        setCalendars(calendarsRes.data as Calendar[]);
+    } catch (err) {
+        console.log(err);
     }
-  }, [user]);
+  }, [user.token]);
 
-  const fetchAllUsers = useCallback(async () => {
-    try{
-      const req = await api.get("/user", {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
-      const users = req.data as Array<User>;
-      setUsers(users);
-    }catch(err){
-      console.log(err);
-    }
-  }, [user]);
 
   useEffect(() => {
-    fetchAllUsers();
-    fetchAllCalendars();
-
-    return () => {
-      setCalendars([]);
-      setUsers([]);
+    if(isOpen) {
+        fetchAllData();
     }
-  }, [fetchAllUsers, fetchAllCalendars]);
+  }, [isOpen, fetchAllData]);
+
 
   if (!isOpen) return null;
 
@@ -206,119 +206,51 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
           <button onClick={onClose}>&times;</button>
         </ModalHeader>
         <ModalBody>
+          {/* Formulário ... (sem alterações no resto dos campos) */}
           <FormGroup>
             <Label htmlFor="title">Título</Label>
-            <Input
-              id="title"
-              name="title"
-              value={currentTask.title || ''}
-              onChange={handleChange}
-              placeholder="Nome da tarefa"
-              required
-            />
+            <Input id="title" name="title" value={currentTask.title || ''} onChange={handleChange} required />
           </FormGroup>
           <FormGroup>
             <Label htmlFor="description">Descrição</Label>
-            <TextArea
-              id="description"
-              name="description"
-              value={currentTask.description || ''}
-              onChange={handleChange}
-              placeholder="Detalhes da tarefa (opcional)"
-            />
+            <TextArea id="description" name="description" value={currentTask.description || ''} onChange={handleChange} />
           </FormGroup>
           <FormGroup>
             <Label htmlFor="date">Data</Label>
-            <Input
-              id="date"
-              name="date"
-              type="date"
-              value={currentTask.date ? format(currentTask.date, 'yyyy-MM-dd') : ''}
-              onChange={handleDateChange}
-              required
-            />
+            <Input id="date" name="date" type="date" value={currentTask.date ? format(currentTask.date, 'yyyy-MM-dd') : ''} onChange={handleDateChange} required />
           </FormGroup>
           <CheckboxGroup>
-            <Input
-              id="isAllDay"
-              name="isAllDay"
-              type="checkbox"
-              checked={currentTask.isAllDay || false}
-              onChange={handleChange}
-            />
+            <Input id="isAllDay" name="isAllDay" type="checkbox" checked={currentTask.isAllDay || false} onChange={handleChange} />
             <Label htmlFor="isAllDay">Dia todo</Label>
           </CheckboxGroup>
-
-          {/* Dropdown para Usuário */}
           <FormGroup>
             <Label>Participantes</Label>
             <UserSelectorContainer>
-              {users.map(user => (
-                <UserCheckboxItem key={user.id}>
-                  <input
-                    type="checkbox"
-                    id={`user-${user.id}`}
-                    checked={currentTask.users?.some(u => u.id === user.id) || false}
-                    onChange={() => handleUserChange(user.id)}
-                  />
-                  <label htmlFor={`user-${user.id}`}>{user.name}</label>
+              {users.map(u => (
+                <UserCheckboxItem key={u.id}>
+                  <input type="checkbox" id={`user-${u.id}`} checked={currentTask.users?.some(selectedUser => selectedUser.id === u.id) || false} onChange={() => handleUserChange(u.id)} />
+                  <label htmlFor={`user-${u.id}`}>{u.name}</label>
                 </UserCheckboxItem>
               ))}
             </UserSelectorContainer>
           </FormGroup>
-
-          {/* Dropdown para Calendário */}
           <FormGroup>
             <Label htmlFor="calendar_id">Calendário</Label>
-            <Select
-              id="calendar_id"
-              name="calendar_id"
-              value={currentTask.calendar_id || ''}
-              onChange={(e) => {
-                const aux = calendars.find(c => Number(c.id) === Number(e.target.value));
-
-                setCurrentTask({
-                  ...currentTask,
-                  color: aux?.color
-                });
-                handleChange(e);
-              }}
-              required
-            >
+            <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleChange} required >
               <option value="" disabled>Selecione um calendário</option>
-              {/* Assumindo que 'availableCalendars' é um array de objetos Calendar com 'id' e 'name' */}
               {calendars.map(calendar => (
-                <option key={calendar.id} value={calendar.id}>
-                  {calendar.name} {/* Adapte para o campo de nome correto do seu tipo Calendar */}
-                </option>
+                <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
               ))}
             </Select>
           </FormGroup>
-
           {!currentTask.isAllDay && (
             <TimeInputs>
-              <FormGroup>
-                <Label htmlFor="startTime">Início</Label>
-                <Input
-                  id="startTime"
-                  name="startTime"
-                  type="time"
-                  value={currentTask.startTime || ''}
-                  onChange={handleChange}
-                />
-              </FormGroup>
-              <FormGroup>
-                <Label htmlFor="endTime">Fim</Label>
-                <Input
-                  id="endTime"
-                  name="endTime"
-                  type="time"
-                  value={currentTask.endTime || ''}
-                  onChange={handleChange}
-                />
-              </FormGroup>
+              <FormGroup><Label htmlFor="startTime">Início</Label><Input id="startTime" name="startTime" type="time" value={currentTask.startTime || ''} onChange={handleChange} /></FormGroup>
+              <FormGroup><Label htmlFor="endTime">Fim</Label><Input id="endTime" name="endTime" type="time" value={currentTask.endTime || ''} onChange={handleChange} /></FormGroup>
             </TimeInputs>
           )}
+
+          {/* Seção de cores atualizada */}
           <FormGroup>
             <Label>Cor</Label>
             <ColorPickerContainer>
@@ -330,26 +262,23 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
                   onClick={() => setCurrentTask(prev => ({ ...prev, color }))}
                 />
               ))}
+              <ColorSwatch $color={isCustomColor ? currentTask.color! : '#ccc'} $isSelected={isCustomColor}>
+                <CustomColorInput
+                  name="color"
+                  value={currentTask.color || '#ffffff'}
+                  onChange={handleChange}
+                />
+              </ColorSwatch>
             </ColorPickerContainer>
           </FormGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && !isLoading && (
-            <Button danger onClick={handleDelete}>
-              Excluir
-            </Button>
-          )}
+          {isEditing && !isLoading && (<Button danger onClick={handleDelete}>Excluir</Button>)}
           <div>
-            {isLoading ? (
-              <ActivityIndicator />
-            ) : (
+            {isLoading ? (<ActivityIndicator />) : (
               <>
-                <Button outline onClick={onClose}>
-                  Cancelar
-                </Button>
-                <Button primary onClick={handleSave}>
-                  {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
-                </Button>
+                <Button outline onClick={onClose}>Cancelar</Button>
+                <Button primary onClick={handleSave}>{isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}</Button>
               </>
             )}
           </div>
