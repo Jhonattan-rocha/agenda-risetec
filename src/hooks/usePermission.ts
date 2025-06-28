@@ -9,7 +9,7 @@ type PermissionAction = 'view' | 'create' | 'update' | 'delete';
 export const usePermission = (action: PermissionAction, entity: string): boolean => {
   // 1. Pega o perfil do usuário logado diretamente do Redux
   const profile: Profile | null = useSelector((state: { authreducer: AuthState }) => state.authreducer.user.profile);
-  console.log(profile)
+
   if (!profile) {
     return false;
   }

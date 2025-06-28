@@ -90,7 +90,7 @@ const LoginPage: React.FC = () => {
         });
 
         req.then((response) => {
-            dispatch(actions.LoginSuccess({ email: response.data.user.email, id: response.data.user.id, token: response.data.access_token, profile: response.data.profile}));
+            dispatch(actions.LoginSuccess({ email: response.data.user.email, id: response.data.user.id, token: response.data.access_token, profile: response.data.user.profile}));
             setError(null);
             setUsername('');
             setPassword('');

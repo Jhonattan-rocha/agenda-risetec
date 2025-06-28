@@ -159,6 +159,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
         }
     };
 
+    console.log(currentUser)
+
     if (!isOpen) return null;
 
     return (
