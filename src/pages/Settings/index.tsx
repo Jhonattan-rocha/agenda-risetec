@@ -2,12 +2,10 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
-import SmtpSettings from '../../components/Settings/SmtpSettings';
 import WhatsAppSettings from '../../components/Settings/WhatsAppSettings';
 import ProfileSettings from '../../components/Settings/ProfileSettings';
 import AppearanceSettings from '../../components/Settings/AppearanceSettings';
-import { FaUser, FaPalette, FaShareAlt, FaFacebookMessenger, FaUserAlt } from 'react-icons/fa';
-import ProfileManagement from '../../components/Settings/ProfileSettings';
+import { FaUser, FaPalette, FaFacebookMessenger } from 'react-icons/fa';
 import UserManagement from '../../components/Settings/UserManagement';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
@@ -100,10 +98,8 @@ const SettingsPage: React.FC = () => {
   const renderContent = () => {
     switch (activeTab) {
       case 'profile':         return <ProfileSettings />;
-      case 'user_profiles':   return <ProfileManagement />; // O que criamos antes
       case 'users':           return <UserManagement />; // O novo
       case 'appearance':      return <AppearanceSettings />;
-      case 'integrations':    return <SmtpSettings />; // Simplificado
       case 'whatsapp':        return <WhatsAppSettings />;
       default:                return <ProfileSettings />;
     }
@@ -129,14 +125,8 @@ const SettingsPage: React.FC = () => {
           <NavItem $isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>
             <FaPalette /> Aparência
           </NavItem>
-          <NavItem $isActive={activeTab === 'integrations'} onClick={() => setActiveTab('integrations')}>
-            <FaShareAlt /> Integrações
-          </NavItem>
           <NavItem $isActive={activeTab === 'whatsapp'} onClick={() => setActiveTab('whatsapp')}>
             <FaFacebookMessenger /> Whatsapp
-          </NavItem>
-          <NavItem $isActive={activeTab === 'user_profiles'} onClick={() => setActiveTab('user_profiles')}>
-            <FaUserAlt /> Usuário/Profile
           </NavItem>
           <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
             <FaUser /> Usuarios

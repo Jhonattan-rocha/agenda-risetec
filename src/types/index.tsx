@@ -38,6 +38,7 @@ export interface Permission {
   can_delete: boolean; 
   can_update: boolean; 
   can_create: boolean;
+  profile_id: string;
 }
 
 export interface Profile {

@@ -15,6 +15,7 @@ import * as authActions from './store/modules/authReducer/actions';
 import { darkTheme, lightTheme } from './styles/theme';
 import { GlobalStyles } from './styles/globalStyles';
 import { ThemeContext } from './utils/contexts';
+import { usePermission } from './hooks/usePermission';
 
 
 const AppHeader = styled.header`
@@ -92,6 +93,8 @@ const AppContent: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  const canViewSettings = usePermission('view', 'profiles');
+
   const handleLogout = () => {
     dispatch(authActions.Loguot());
     navigate('/login');
@@ -106,9 +109,11 @@ const AppContent: React.FC = () => {
             <span>{user.username}</span>
           </UserAvatarButton>
           <DropdownMenu $isOpen={menuOpen}>
-            <DropdownItem to="/settings" onClick={() => setMenuOpen(false)}>
-              <FaCog /> Configurações
-            </DropdownItem>
+            { canViewSettings ? (
+              <DropdownItem to="/settings" onClick={() => setMenuOpen(false)}>
+                <FaCog /> Configurações
+              </DropdownItem>
+            ) : null}
             <LogoutButton onClick={handleLogout}>
               <FaSignOutAlt /> Sair
             </LogoutButton>
