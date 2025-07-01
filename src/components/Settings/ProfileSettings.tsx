@@ -9,6 +9,7 @@ import type { AuthState } from '../../store/modules/types';
 import ActivityIndicator from '../ActivityIndicator';
 import { FaPlus, FaEdit, FaSave, FaTrash } from 'react-icons/fa';
 import ProfileModal from './ProfileModal'; // IMPORTA O NOVO MODAL
+import { usePermission } from '../../hooks/usePermission'; // Importar hook
 
 // --- ESTILOS ---
 
@@ -111,7 +112,11 @@ const ProfileManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
-
+  const canCreateProfiles = usePermission('create', 'profiles');
+  const canUpdateProfiles = usePermission('update', 'profiles');
+  const canDeleteProfiles = usePermission('delete', 'profiles');
+  const canUpdatePermissions = usePermission('update', 'permissions');
+  
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profileToEdit, setProfileToEdit] = useState<Partial<Profile> | null>(null);
 
@@ -207,7 +212,7 @@ const ProfileManagement: React.FC = () => {
 
           payload = { name: payload.name, id: res.data.id, permissions: payload.permissions.map(p => { return { ...p, profile_id: res.data.id } }) }
         }
-        for (let permission of payload.permissions) {
+        for (const permission of payload.permissions) {
           if (permission.id){
             await api.put(`/permissions/${permission.id}`, { ...permission,  }, {
               headers: { Authorization: `Bearer ${user.token}` }
@@ -219,7 +224,7 @@ const ProfileManagement: React.FC = () => {
           }
         }
     } catch (error) {
-        alert("Falha ao salvar permissões.");
+        alert(`Falha ao salvar permissões: ${error}.`);
     } finally {
         setIsSaving(false);
         fetchProfiles();
@@ -249,7 +254,7 @@ const ProfileManagement: React.FC = () => {
           });
         }
     }catch(err){
-
+      console.log(err);
     } finally {
       setIsLoading(false);
       fetchProfiles();
@@ -291,23 +296,29 @@ const ProfileManagement: React.FC = () => {
               >
                 <span>{profile.name}</span>
                 <div>
-                  <EditButton small outline onClick={(e) => { e.stopPropagation(); setSelectedProfile(profile); handleOpenEditModal(profile);}}>
-                    <FaEdit />  
-                  </EditButton>
-                  <DeleteButton small outline danger onClick={(e) => { e.stopPropagation(); handleDeleteProfile(profile) }}>
-                    { isLoading && selectedProfile && selectedProfile.id === profile.id ? (
-                      <ActivityIndicator style={{ width: 20, height: 20 }}/>
-                    ) : (
-                      <FaTrash />
-                    )}
-                  </DeleteButton>
+                  {canUpdateProfiles && (
+                    <EditButton small outline onClick={(e) => { e.stopPropagation(); handleOpenEditModal(profile);}}>
+                      <FaEdit />
+                    </EditButton>
+                  )}
+                  {canDeleteProfiles && (
+                    <DeleteButton small outline danger onClick={(e) => { e.stopPropagation(); handleDeleteProfile(profile) }}>
+                      { isLoading && selectedProfile && selectedProfile.id === profile.id ? (
+                        <ActivityIndicator style={{ width: 20, height: 20 }}/>
+                      ) : (
+                        <FaTrash />
+                      )}
+                    </DeleteButton>
+                  )}
                 </div>
               </ProfileListItem>
             ))
           )}
-          <Button outline onClick={handleOpenCreateModal} style={{ width: '100%', marginTop: '1rem' }}>
-            <FaPlus style={{ marginRight: '8px' }}/> Novo Perfil
-          </Button>
+          {canCreateProfiles && (
+            <Button outline onClick={handleOpenCreateModal} style={{ width: '100%', marginTop: '1rem' }}>
+              <FaPlus style={{ marginRight: '8px' }}/> Novo Perfil
+            </Button>
+          )}
         </ProfileListContainer>
         
         <PermissionsContainer>
@@ -364,9 +375,11 @@ const ProfileManagement: React.FC = () => {
                 </PermissionsTable>
 
                 <div style={{display: 'flex', justifyContent: 'flex-end', marginTop: '2rem'}}>
-                    <Button primary onClick={handleSavePermissions} disabled={isSaving}>
-                        <FaSave /> {isSaving ? 'Salvando...' : 'Salvar Permissões'}
-                    </Button>
+                    {canUpdatePermissions && (
+                      <Button primary onClick={handleSavePermissions} disabled={isSaving}>
+                          <FaSave /> {isSaving ? 'Salvando...' : 'Salvar Permissões'}
+                      </Button>
+                    )}
                 </div>
                 </>
               ) : <p>Selecione um perfil para gerenciar suas permissões.</p>}

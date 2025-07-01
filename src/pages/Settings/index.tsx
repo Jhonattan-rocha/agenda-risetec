@@ -2,14 +2,15 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
-import WhatsAppSettings from '../../components/Settings/WhatsAppSettings';
 import ProfileSettings from '../../components/Settings/ProfileSettings';
 import AppearanceSettings from '../../components/Settings/AppearanceSettings';
-import { FaUser, FaPalette, FaFacebookMessenger } from 'react-icons/fa';
+import { FaUser, FaPalette, FaUsersCog } from 'react-icons/fa'; // Ícone atualizado
 import UserManagement from '../../components/Settings/UserManagement';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
+import { usePermission } from '../../hooks/usePermission'; // Importa o hook
 
+// ... (estilos permanecem os mesmos)
 const SettingsLayout = styled.div`
   display: flex;
   max-width: 1200px;
@@ -88,20 +89,35 @@ const BackLink = styled(Link)`
   color: ${({ theme }) => theme.colors.primary};
 `;
 
-type Tab = 'profile' | 'user_profiles' | 'users' | 'calendar_profiles' | 'appearance' | 'integrations' | 'whatsapp';
+type Tab = 'profiles' | 'users' | 'appearance';
 
 const SettingsPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<Tab>('profile');
+  const [activeTab, setActiveTab] = useState<Tab>('appearance');
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const navigate = useNavigate();
 
+  // Verificações de permissão
+  const canViewProfiles = usePermission('view', 'profiles');
+  const canViewUsers = usePermission('view', 'users');
+
+  useEffect(() => {
+    // Define a aba padrão com base nas permissões
+    if (canViewProfiles) {
+      setActiveTab('profiles');
+    } else if (canViewUsers) {
+      setActiveTab('users');
+    } else {
+      setActiveTab('appearance');
+    }
+  }, [canViewProfiles, canViewUsers]);
+
+
   const renderContent = () => {
     switch (activeTab) {
-      case 'profile':         return <ProfileSettings />;
-      case 'users':           return <UserManagement />; // O novo
-      case 'appearance':      return <AppearanceSettings />;
-      case 'whatsapp':        return <WhatsAppSettings />;
-      default:                return <ProfileSettings />;
+      case 'profiles':   return canViewProfiles ? <ProfileSettings /> : null;
+      case 'users':        return canViewUsers ? <UserManagement /> : null;
+      case 'appearance':   return <AppearanceSettings />;
+      default:             return <AppearanceSettings />;
     }
   };
 
@@ -119,18 +135,25 @@ const SettingsPage: React.FC = () => {
       </Header>
       <SettingsLayout>
         <SettingsNav>
-          <NavItem $isActive={activeTab === 'profile'} onClick={() => setActiveTab('profile')}>
-            <FaUser /> Perfil
-          </NavItem>
+          {/* Aba de Perfis */}
+          {canViewProfiles && (
+            <NavItem $isActive={activeTab === 'profiles'} onClick={() => setActiveTab('profiles')}>
+              <FaUsersCog /> Perfis
+            </NavItem>
+          )}
+
+          {/* Aba de Usuários */}
+          {canViewUsers && (
+            <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
+              <FaUser /> Usuários
+            </NavItem>
+          )}
+          
+          {/* Aba de Aparência (geralmente visível para todos) */}
           <NavItem $isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>
             <FaPalette /> Aparência
           </NavItem>
-          <NavItem $isActive={activeTab === 'whatsapp'} onClick={() => setActiveTab('whatsapp')}>
-            <FaFacebookMessenger /> Whatsapp
-          </NavItem>
-          <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
-            <FaUser /> Usuarios
-          </NavItem>
+
         </SettingsNav>
         <SettingsContent>
           {renderContent()}

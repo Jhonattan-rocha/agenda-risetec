@@ -1,3 +1,4 @@
+// src/hooks/usePermission.ts
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../store/modules/types';
 import type { Profile, Permission } from '../types';
@@ -14,23 +15,27 @@ export const usePermission = (action: PermissionAction, entity: string): boolean
     return false;
   }
 
+  // Se o usuário for um super admin (ex: perfil com nome 'Admin'), concede todas as permissões.
+  // Esta é uma maneira simples de ter um superusuário.
+  if (profile.name === 'Admin') {
+    return true;
+  }
+
   // 2. Extrai as permissões do perfil
   const permissions = profile.permissions || [];
 
   // 3. Lógica de verificação centralizada
-  
-  // Converte a ação do hook para a chave correspondente no objeto de permissão
-  const permissionKey: keyof Omit<Permission, 'id' | 'entity_name'> = `can_${action}`;
+  const permissionKey: keyof Omit<Permission, 'id' | 'entity_name' | 'profile_id'> = `can_${action}`;
 
-  // 4. Verifica a permissão de "Super Admin" para a entidade principal
+  // 4. Verifica a permissão de "Super Admin" para o tipo de entidade
   // Ex: Se a entidade for 'calendar_123', verifica se há permissão para 'calendars'
-  const entityType = entity.split('_')[0]; // 'calendar'
+  const entityType = entity.split('_')[0]; // ex: 'calendars'
   const adminPermission = permissions.find(p => p.entity_name === entityType);
   if (adminPermission && adminPermission[permissionKey]) {
-    return true; // Se tem a permissão de admin, concede acesso
+    return true; // Se tem a permissão de admin para o tipo, concede acesso
   }
 
-  // 5. Se não for admin, verifica a permissão específica
+  // 5. Se não for admin, verifica a permissão específica para a entidade
   const specificPermission = permissions.find(p => p.entity_name === entity);
   if (specificPermission && specificPermission[permissionKey]) {
     return true; // Se tem a permissão específica, concede acesso
