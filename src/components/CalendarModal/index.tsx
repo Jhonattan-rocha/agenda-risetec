@@ -7,6 +7,7 @@ import type { AuthState } from '../../store/modules/types';
 import { useSelector } from 'react-redux';
 import api from '../../services/axios';
 import ActivityIndicator from '../ActivityIndicator';
+import { usePermission } from '../../hooks/usePermission';
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -172,7 +173,11 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  
+  const canUpdateCalendar = usePermission('update', `calendar_${calendar?.id}`);
+  const canDeleteCalendar = usePermission('delete', `calendar_${calendar?.id}`);
+  const canCreateCalendar = usePermission('create', 'calendars');
+  const canSave = isEditing ? canUpdateCalendar : canCreateCalendar;
+
   // NOVO: Verifica se a cor atual é uma das predefinidas
   const isCustomColor = !predefinedColors.includes(currentCalendar.color || '');
 
@@ -292,7 +297,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
           </CheckboxGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && !isLoading && (
+          {isEditing && !isLoading && canDeleteCalendar && (
             <Button danger onClick={handleDelete}>
               Excluir
             </Button>
@@ -304,9 +309,11 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               <Button outline onClick={onClose}>
                 Cancelar
               </Button>
-              <Button primary onClick={handleSave}>
-                {isEditing ? 'Salvar Alterações' : 'Criar Calendário'}
-              </Button>
+              {canSave && (
+                <Button primary onClick={handleSave}>
+                  {isEditing ? 'Salvar Alterações' : 'Criar Calendário'}
+                </Button>
+              )}
             </div>
           )}
         </ModalFooter>

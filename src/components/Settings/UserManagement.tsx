@@ -9,6 +9,7 @@ import type { AuthState } from '../../store/modules/types';
 import ActivityIndicator from '../ActivityIndicator';
 import UserModal from './UserModal'; // To be created
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
+import { usePermission } from '../../hooks/usePermission';
 
 // --- ESTILOS ---
 const UserManagementContainer = styled(Card)`
@@ -62,6 +63,9 @@ const UserManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState<User | null>(null);
     const authUser = useSelector((state: { authreducer: AuthState }) => state.authreducer);
+    const canCreateUsers = usePermission('create', 'users');
+    const canUpdateUsers = usePermission('update', 'users');
+    const canDeleteUsers = usePermission('delete', 'users');
 
     const fetchUsers = useCallback(async () => {
         setIsLoading(true);
@@ -76,7 +80,7 @@ const UserManagement: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [authUser.token]);
+    }, [authUser]);
 
     useEffect(() => {
         fetchUsers();
@@ -117,9 +121,11 @@ const UserManagement: React.FC = () => {
         <UserManagementContainer>
             <Header>
                 <h2>Gerenciamento de Usuários</h2>
-                <Button primary onClick={handleOpenCreateModal}>
-                    <FaPlus /> Novo Usuário
-                </Button>
+                {canCreateUsers && (
+                  <Button primary onClick={handleOpenCreateModal}>
+                      <FaPlus /> Novo Usuário
+                  </Button>
+                )}
             </Header>
 
             {isLoading ? (
@@ -136,12 +142,16 @@ const UserManagement: React.FC = () => {
                                 </div>
                             </UserInfo>
                             <ActionButtons>
-                                <Button outline small onClick={() => handleOpenEditModal(user)}>
-                                    <FaEdit /> Editar
-                                </Button>
-                                <Button danger small onClick={() => handleDeleteUser(user.id)}>
-                                    <FaTrash /> Excluir
-                                </Button>
+                                {canUpdateUsers && (
+                                  <Button outline small onClick={() => handleOpenEditModal(user)}>
+                                      <FaEdit /> Editar
+                                  </Button>
+                                )}
+                                {canDeleteUsers && (
+                                  <Button danger small onClick={() => handleDeleteUser(user.id)}>
+                                      <FaTrash /> Excluir
+                                  </Button>
+                                )}
                             </ActionButtons>
                         </UserItem>
                     ))}

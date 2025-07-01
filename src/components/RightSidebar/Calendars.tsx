@@ -7,6 +7,7 @@ import { FaPlus } from 'react-icons/fa';
 import api from '../../services/axios';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
+import { usePermission } from '../../hooks/usePermission';
 
 interface CalendarsProps {
   calendars: Calendar[];
@@ -72,10 +73,15 @@ const NoCalendarsMessage = styled.p`
 const Calendars: React.FC<CalendarsProps> = ({ calendars, onUpdate, onCalendarClick, onCreateCalendar }) => {
   const sortedCalendars = calendars;
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer );
+  const canCreateCalendars = usePermission('create', 'calendars');
 
   return (
     <CalendarsContainer>
-      <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Calendarios</h3><FaPlus size={30} cursor={'pointer'} onClick={onCreateCalendar} /></div>
+      <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Calendarios</h3>
+        {canCreateCalendars && (
+          <FaPlus size={24} cursor={'pointer'} onClick={onCreateCalendar} />
+        )}
+      </div>
       {sortedCalendars.length > 0 ? (
         <div className="calendar-list">
           {sortedCalendars.map(calendar => (

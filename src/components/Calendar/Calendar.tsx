@@ -15,6 +15,7 @@ import CalendarModal from '../CalendarModal';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
+import { usePermission } from '../../hooks/usePermission'; // Importar hook
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -75,7 +76,9 @@ const CalendarScreen: React.FC = () => {
   // calendarios
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
+  const canViewAnyCalendar = usePermission('view', 'calendars');
 
+  // O useMemo para `tasks` já filtra baseado nos calendários visíveis, o que é perfeito.
   const tasks = useMemo(() => {
     return allTasks.filter(task => calendars.find(calendar => Number(calendar.id) === Number(task.calendar_id))?.visible );
   }, [allTasks, calendars]);
@@ -95,18 +98,24 @@ const CalendarScreen: React.FC = () => {
   }, [user]);
 
   const fetchAllCalendars = useCallback(async () => {
-    try{
-      const req = await api.get("/calendar", {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
-      });
-      const calendars = req.data as Array<Calendar>;
-      setCalendars(calendars);
-    }catch(err){
+    try {
+      const req = await api.get("/calendar", { headers: { Authorization: `Bearer ${user.token}` } });
+      const allCalendars = req.data as Array<Calendar>;
+
+      // Filtra os calendários com base na permissão do usuário
+      const permittedCalendars = allCalendars.filter(calendar => 
+        // Permite se o usuário tem permissão geral ou permissão específica para este calendário
+        usePermission('view', `calendar_${calendar.id}`)
+      );
+      
+      // Se o usuário tiver a permissão geral `view` em `calendars`, mostramos todos.
+      // Caso contrário, mostramos apenas os permitidos especificamente.
+      setCalendars(canViewAnyCalendar ? allCalendars : permittedCalendars);
+
+    } catch(err) {
       console.log(err);
     }
-  }, [user]);
+  }, [user.token, canViewAnyCalendar]);
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {

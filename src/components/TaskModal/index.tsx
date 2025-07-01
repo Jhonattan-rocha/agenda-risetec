@@ -12,6 +12,7 @@ import { CheckboxGroup, ColorPickerContainer, ColorSwatch, FormGroup, Input, Lab
   Select, TextArea, TimeInputs, UserCheckboxItem, UserSelectorContainer
  } from './styled';
 import styled from 'styled-components'; // Importar styled
+import { usePermission } from '../../hooks/usePermission';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -63,7 +64,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!task;
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const calendarIdForPermission = currentTask.calendar_id || task?.calendar_id;
+
+  const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`);
+  const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`);
+  const canDeleteTask = usePermission('delete', `calendar_${calendarIdForPermission}`);
   
+  // Determina se o usuário pode salvar
+  const canSave = isEditing ? canUpdateTask : canCreateTask;
+
   // NOVO: Verifica se a cor da tarefa é customizada
   const isCustomColor = !predefinedColors.includes(currentTask.color || '');
 
@@ -273,12 +282,18 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
           </FormGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
-          {isEditing && !isLoading && (<Button danger onClick={handleDelete}>Excluir</Button>)}
+          {isEditing && !isLoading && canDeleteTask && (
+            <Button danger onClick={handleDelete}>Excluir</Button>
+          )}
           <div>
             {isLoading ? (<ActivityIndicator />) : (
               <>
                 <Button outline onClick={onClose}>Cancelar</Button>
-                <Button primary onClick={handleSave}>{isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}</Button>
+                {canSave && (
+                  <Button primary onClick={handleSave}>
+                    {isEditing ? 'Salvar Alterações' : 'Criar Tarefa'}
+                  </Button>
+                )}
               </>
             )}
           </div>
