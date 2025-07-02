@@ -112,10 +112,10 @@ const ProfileManagement: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
-  const canCreateProfiles = usePermission('create', 'profiles');
-  const canUpdateProfiles = usePermission('update', 'profiles');
-  const canDeleteProfiles = usePermission('delete', 'profiles');
-  const canUpdatePermissions = usePermission('update', 'permissions');
+  const canCreateProfiles = usePermission('create', 'profiles', user.user.profile as Profile);
+  const canUpdateProfiles = usePermission('update', 'profiles', user.user.profile as Profile);
+  const canDeleteProfiles = usePermission('delete', 'profiles', user.user.profile as Profile);
+  const canUpdatePermissions = usePermission('update', 'profiles', user.user.profile as Profile);
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [profileToEdit, setProfileToEdit] = useState<Partial<Profile> | null>(null);

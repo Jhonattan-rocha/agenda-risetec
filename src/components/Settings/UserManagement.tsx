@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { Card, Button } from '../Common';
-import type { User } from '../../types';
+import type { Profile, User } from '../../types';
 import api from '../../services/axios';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
@@ -63,9 +63,9 @@ const UserManagement: React.FC = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [userToEdit, setUserToEdit] = useState<User | null>(null);
     const authUser = useSelector((state: { authreducer: AuthState }) => state.authreducer);
-    const canCreateUsers = usePermission('create', 'users');
-    const canUpdateUsers = usePermission('update', 'users');
-    const canDeleteUsers = usePermission('delete', 'users');
+    const canCreateUsers = usePermission('create', 'users', authUser.user.profile as Profile);
+    const canUpdateUsers = usePermission('update', 'users', authUser.user.profile as Profile);
+    const canDeleteUsers = usePermission('delete', 'users', authUser.user.profile as Profile);
 
     const fetchUsers = useCallback(async () => {
         setIsLoading(true);

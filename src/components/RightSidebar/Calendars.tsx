@@ -2,7 +2,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Card } from '../Common';
-import type { Calendar } from '../../types';
+import type { Calendar, Profile } from '../../types';
 import { FaPlus } from 'react-icons/fa';
 import api from '../../services/axios';
 import { useSelector } from 'react-redux';
@@ -73,7 +73,7 @@ const NoCalendarsMessage = styled.p`
 const Calendars: React.FC<CalendarsProps> = ({ calendars, onUpdate, onCalendarClick, onCreateCalendar }) => {
   const sortedCalendars = calendars;
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer );
-  const canCreateCalendars = usePermission('create', 'calendars');
+  const canCreateCalendars = usePermission('create', 'calendars', user.user.profile as Profile);
 
   return (
     <CalendarsContainer>

@@ -9,8 +9,8 @@ import UserManagement from '../../components/Settings/UserManagement';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import { usePermission } from '../../hooks/usePermission'; // Importa o hook
+import type { Profile } from '../../types';
 
-// ... (estilos permanecem os mesmos)
 const SettingsLayout = styled.div`
   display: flex;
   max-width: 1200px;
@@ -97,8 +97,8 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
 
   // Verificações de permissão
-  const canViewProfiles = usePermission('view', 'profiles');
-  const canViewUsers = usePermission('view', 'users');
+  const canViewProfiles = usePermission('view', 'profiles', user.user.profile as Profile);
+  const canViewUsers = usePermission('view', 'users', user.user.profile as Profile);
 
   useEffect(() => {
     // Define a aba padrão com base nas permissões

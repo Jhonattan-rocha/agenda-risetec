@@ -1,7 +1,7 @@
 // src/components/TaskModal/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../Common';
-import type { Calendar, Task, User } from '../../types';
+import type { Calendar, Profile, Task, User } from '../../types';
 import { format, parseISO } from 'date-fns';
 import { v4 as uuidv4 } from 'uuid';
 import { useSelector } from 'react-redux';
@@ -66,9 +66,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const calendarIdForPermission = currentTask.calendar_id || task?.calendar_id;
 
-  const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`);
-  const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`);
-  const canDeleteTask = usePermission('delete', `calendar_${calendarIdForPermission}`);
+  const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
+  const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
+  const canDeleteTask = usePermission('delete', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
   
   // Determina se o usuário pode salvar
   const canSave = isEditing ? canUpdateTask : canCreateTask;

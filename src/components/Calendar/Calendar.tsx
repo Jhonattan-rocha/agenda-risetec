@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
-import type { Calendar, DayInfo, Task, ViewMode } from '../../types';
+import type { Calendar, DayInfo, Profile, Task, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
 import CalendarHeader from './CalendarHeader';
 import ViewModeSelector from './ViewModeSelector';
@@ -76,7 +76,7 @@ const CalendarScreen: React.FC = () => {
   // calendarios
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
-  const canViewAnyCalendar = usePermission('view', 'calendars');
+  const canViewAnyCalendar = usePermission('view', 'calendars', user.user.profile as Profile);
 
   // O useMemo para `tasks` já filtra baseado nos calendários visíveis, o que é perfeito.
   const tasks = useMemo(() => {
@@ -105,9 +105,9 @@ const CalendarScreen: React.FC = () => {
       // Filtra os calendários com base na permissão do usuário
       const permittedCalendars = allCalendars.filter(calendar => 
         // Permite se o usuário tem permissão geral ou permissão específica para este calendário
-        usePermission('view', `calendar_${calendar.id}`)
+        usePermission('view', `calendar_${calendar.id}`, user.user.profile as Profile)
       );
-      
+
       // Se o usuário tiver a permissão geral `view` em `calendars`, mostramos todos.
       // Caso contrário, mostramos apenas os permitidos especificamente.
       setCalendars(canViewAnyCalendar ? allCalendars : permittedCalendars);

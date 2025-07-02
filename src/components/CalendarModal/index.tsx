@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { Button, Card } from '../Common';
-import type { Calendar } from '../../types';
+import type { Calendar, Profile } from '../../types';
 import type { AuthState } from '../../store/modules/types';
 import { useSelector } from 'react-redux';
 import api from '../../services/axios';
@@ -173,9 +173,9 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const canUpdateCalendar = usePermission('update', `calendar_${calendar?.id}`);
-  const canDeleteCalendar = usePermission('delete', `calendar_${calendar?.id}`);
-  const canCreateCalendar = usePermission('create', 'calendars');
+  const canUpdateCalendar = usePermission('update', `calendar_${calendar?.id}`, user.user.profile as Profile);
+  const canDeleteCalendar = usePermission('delete', `calendar_${calendar?.id}`, user.user.profile as Profile);
+  const canCreateCalendar = usePermission('create', 'calendars', user.user.profile as Profile);
   const canSave = isEditing ? canUpdateCalendar : canCreateCalendar;
 
   // NOVO: Verifica se a cor atual é uma das predefinidas

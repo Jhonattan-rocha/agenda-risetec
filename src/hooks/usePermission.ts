@@ -1,15 +1,12 @@
 // src/hooks/usePermission.ts
-import { useSelector } from 'react-redux';
-import type { AuthState } from '../store/modules/types';
 import type { Profile, Permission } from '../types';
 
 // O tipo de ação que queremos verificar
 type PermissionAction = 'view' | 'create' | 'update' | 'delete';
 
 // O hook recebe a ação e a entidade (que pode ser genérica ou específica)
-export const usePermission = (action: PermissionAction, entity: string): boolean => {
+export const usePermission = (action: PermissionAction, entity: string, profile: Profile): boolean => {
   // 1. Pega o perfil do usuário logado diretamente do Redux
-  const profile: Profile | null = useSelector((state: { authreducer: AuthState }) => state.authreducer.user.profile);
 
   if (!profile) {
     return false;

@@ -16,6 +16,7 @@ import { darkTheme, lightTheme } from './styles/theme';
 import { GlobalStyles } from './styles/globalStyles';
 import { ThemeContext } from './utils/contexts';
 import { usePermission } from './hooks/usePermission';
+import type { Profile } from './types';
 
 
 const AppHeader = styled.header`
@@ -93,7 +94,7 @@ const AppContent: React.FC = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const canViewSettings = usePermission('view', 'profiles');
+  const canViewSettings = usePermission('view', 'profiles', user.profile as Profile);
 
   const handleLogout = () => {
     dispatch(authActions.Loguot());
