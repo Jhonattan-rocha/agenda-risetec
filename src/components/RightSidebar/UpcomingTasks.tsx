@@ -5,6 +5,7 @@ import { Card } from '../Common';
 import type { Task } from '../../types';
 import { format, isFuture, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa'; // Importar ícones
 
 interface UpcomingTasksProps {
   tasks: Task[];
@@ -25,12 +26,14 @@ const UpcomingTasksContainer = styled(Card)`
   }
 `;
 
-const TaskItemWrapper = styled.div<{ $color?: string }>`
+const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean; }>`
   display: flex;
   align-items: center;
   padding: ${({ theme }) => theme.spacing.sm} 0;
   border-bottom: 1px dashed ${({ theme }) => theme.colors.border};
   cursor: pointer;
+  opacity: ${({ $isCancelled }) => ($isCancelled ? 0.6 : 1)};
+  text-decoration: ${({ $isCancelled }) => ($isCancelled ? 'line-through' : 'none')};
   
   &:last-child {
     border-bottom: none;
@@ -49,6 +52,9 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
       font-size: 0.95rem;
       margin: 0;
       color: ${({ theme }) => theme.colors.textPrimary};
+      display: flex; // Para alinhar o ícone
+      align-items: center;
+      gap: 6px;
     }
     p {
       font-size: 0.8rem;
@@ -65,6 +71,15 @@ const NoTasksMessage = styled.p`
   padding: ${({ theme }) => theme.spacing.md} 0;
 `;
 
+const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
+    switch (status) {
+        case 'confirmed': return <FaCheckCircle size={12} color="green" title="Confirmado" />;
+        case 'tentative': return <FaQuestionCircle size={12} color="orange" title="Pendente" />;
+        case 'cancelled': return <FaTimesCircle size={12} color="red" title="Cancelado" />;
+        default: return null;
+    }
+};
+
 const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
   const sortedTasks = tasks
     .filter(task => isFuture(task.date) || isToday(task.date))
@@ -76,16 +91,24 @@ const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
       {sortedTasks.length > 0 ? (
         <div className="task-list">
           {sortedTasks.map(task => (
-            <TaskItemWrapper key={task.id} $color={task.color} onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onTaskClik?.(task);
-            }}>
+            <TaskItemWrapper 
+              key={task.id} 
+              $color={task.color} 
+              $isCancelled={task.status === 'cancelled'} // Passar a prop
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTaskClik?.(task);
+              }}
+            >
               <div className="color-dot" />
               <div className="task-details">
-                <h4>{task.title}</h4>
+                <h4>
+                  <StatusIcon status={task.status} /> {/* Adicionar o ícone */}
+                  {task.title}
+                </h4>
                 <p>
-                  {format(task.date, 'dd MMM', { locale: ptBR })}
+                  {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
                   {task.startTime && ` às ${task.startTime}`}
                 </p>
               </div>

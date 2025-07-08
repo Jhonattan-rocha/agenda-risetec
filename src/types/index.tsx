@@ -7,21 +7,29 @@ export interface Calendar {
   name: string;
   color: string;
   visible: boolean;
-  tasks: Array<Task>
+  tasks: Array<Task>;
+  // NOVOS CAMPOS
+  description?: string;
+  is_private?: boolean;
+  owner_id?: string;
 }
 
-// MODIFICADO: A tarefa agora pode ter múltiplos usuários.
 export interface Task {
   id: string;
   title: string;
   description?: string;
   date: Date;
   isAllDay?: boolean;
-  startTime?: string; // e.g., "09:00"
-  endTime?: string;   // e.g., "10:00"
-  color?: string;     // e.g., "#FFDDC1"
+  startTime?: string;
+  endTime?: string;
+  color?: string;
   calendar_id: string;
-  users: User[]; // MODIFICADO: De user_id: string para users: User[]
+  users: User[];
+  // NOVOS CAMPOS
+  location?: string;
+  status?: 'confirmed' | 'tentative' | 'cancelled';
+  recurring_rule?: string; // Ex: "FREQ=WEEKLY;BYDAY=MO"
+  created_by?: string;
 }
 
 export interface DayInfo {
@@ -47,12 +55,14 @@ export interface Profile {
   permissions: Array<Permission>
 }
 
-// MODIFICADO: O usuário agora tem uma URL de avatar.
 export interface User {
   id: string;
   name: string;
   email: string;
-  password?: string; // Senha é opcional no frontend
+  password?: string;
   profile_id: string;
-  avatarUrl: string; // NOVO: URL para a foto de perfil do usuário.
+  avatarUrl: string;
+  // NOVO CAMPO
+  phone_number?: string;
+  last_login?: Date;
 }

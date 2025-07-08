@@ -6,6 +6,7 @@ import UpcomingTasks from './UpcomingTasks';
 import type { Calendar, Task } from '../../types';
 import DailyTasks from './DailyTasks';
 import Calendars from './Calendars';
+import { isSameDay } from 'date-fns'; // NOVO: Importa isSameDay
 
 interface RightSidebarProps {
   currentDate: Date;
@@ -22,7 +23,7 @@ interface RightSidebarProps {
 const SidebarContainer = styled.aside`
   width: 300px;
   padding: ${({ theme }) => theme.spacing.lg};
-  background-color: ${({ theme }) => theme.colors.background}; // Slightly different background for distinction
+  background-color: ${({ theme }) => theme.colors.background}; 
   border-left: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
   flex-direction: column;
@@ -60,14 +61,12 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, 
         onCalendarClick={onCalendarClick}
         onUpdate={onUpdate}
       />
-      <DailyTasks onTaskClik={onTaskClick} tasks={tasks.filter(task => {
-          const aux = new Date(currentDate.toISOString());
-          aux.setHours(0);
-          aux.setMinutes(0);
-          aux.setSeconds(0);
-          aux.setMilliseconds(0);
-          return new Date(task.date).toISOString() === aux.toISOString();
-      })}/>
+      {/* CORRIGIDO: Usa isSameDay para uma comparação de data mais segura */}
+      <DailyTasks 
+        onTaskClik={onTaskClick} 
+        tasks={tasks.filter(task => isSameDay(new Date(task.date), currentDate))}
+      />
+      {/* O componente UpcomingTasks já recebe a lista 'tasks' corretamente filtrada por permissão */}
       <UpcomingTasks onTaskClik={onTaskClick} tasks={tasks} />
     </SidebarContainer>
   );

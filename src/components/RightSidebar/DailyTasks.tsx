@@ -5,6 +5,7 @@ import { Card } from '../Common';
 import type { Task } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 
 interface DailyTasksProps {
   tasks: Task[];
@@ -25,13 +26,18 @@ const DailyTasksContainer = styled(Card)`
   }
 `;
 
-const TaskItemWrapper = styled.div<{ $color?: string }>`
+// ATUALIZADO: Adiciona a prop $isCancelled para estilização condicional
+const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean }>`
   display: flex;
   align-items: center;
   padding: ${({ theme }) => theme.spacing.sm} 0;
   border-bottom: 1px dashed ${({ theme }) => theme.colors.border};
   cursor: pointer;
   
+  // NOVO: Aplica estilo para tarefas canceladas
+  opacity: ${({ $isCancelled }) => ($isCancelled ? 0.6 : 1)};
+  text-decoration: ${({ $isCancelled }) => ($isCancelled ? 'line-through' : 'none')};
+
   &:last-child {
     border-bottom: none;
   }
@@ -49,11 +55,16 @@ const TaskItemWrapper = styled.div<{ $color?: string }>`
       font-size: 0.95rem;
       margin: 0;
       color: ${({ theme }) => theme.colors.textPrimary};
+      // NOVO: Flex para alinhar ícone e texto
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     p {
       font-size: 0.8rem;
       color: ${({ theme }) => theme.colors.textSecondary};
       margin: 0;
+      padding-left: 16px; // Alinha com o texto do título
     }
   }
 `;
@@ -65,17 +76,30 @@ const NoTasksMessage = styled.p`
   padding: ${({ theme }) => theme.spacing.md} 0;
 `;
 
+// NOVO: Componente para renderizar o ícone de status
+const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
+    switch (status) {
+        case 'confirmed': return <FaCheckCircle size={12} color="green" title="Confirmado" />;
+        case 'tentative': return <FaQuestionCircle size={12} color="orange" title="Pendente" />;
+        case 'cancelled': return <FaTimesCircle size={12} color="red" title="Cancelado" />;
+        default: return null;
+    }
+};
+
 const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
-  const sortedTasks: Array<Task> = [...tasks];
+  // A ordenação já está correta
+  const sortedTasks: Array<Task> = [...tasks].sort((a, b) => {
+    const dateA = new Date(a.date);
+    const dateB = new Date(b.date);
 
-  sortedTasks.sort((a, b) => {
-    const dateDiff = new Date(a.date).getTime() - new Date(b.date).getTime();
-    if (dateDiff !== 0) return dateDiff;
-
-    const startDiff = String(a.startTime).localeCompare(String(b.startTime));
-    if (startDiff !== 0) return startDiff;
-
-    return String(a.endTime).localeCompare(String(b.endTime));
+    // Primeiro, ordena por data
+    if (dateA < dateB) return -1;
+    if (dateA > dateB) return 1;
+  
+    // Se as datas forem iguais, ordena por hora de início
+    const startA = a.startTime || '';
+    const startB = b.startTime || '';
+    return startA.localeCompare(startB);
   });
 
   return (
@@ -84,16 +108,25 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
       {sortedTasks.length > 0 ? (
         <div className="task-list">
           {sortedTasks.map(task => (
-            <TaskItemWrapper key={task.id} $color={task.color} onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onTaskClik?.(task);
-            }}>
+            <TaskItemWrapper 
+              key={task.id} 
+              $color={task.color} 
+              // ATUALIZADO: Passa a prop para o styled component
+              $isCancelled={task.status === 'cancelled'}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onTaskClik?.(task);
+              }}>
               <div className="color-dot" />
               <div className="task-details">
-                <h4>{task.title}</h4>
+                <h4>
+                  {/* NOVO: Renderiza o ícone de status */}
+                  <StatusIcon status={task.status} />
+                  {task.title}
+                </h4>
                 <p>
-                  {format(task.date, 'dd MMM', { locale: ptBR })}
+                  {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
                   {task.startTime && ` às ${task.startTime}`}
                 </p>
               </div>
@@ -101,7 +134,7 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
           ))}
         </div>
       ) : (
-        <NoTasksMessage>Nenhuma tarefa futura agendada.</NoTasksMessage>
+        <NoTasksMessage>Nenhuma tarefa para hoje.</NoTasksMessage>
       )}
     </DailyTasksContainer>
   );

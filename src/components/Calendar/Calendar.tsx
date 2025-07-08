@@ -2,7 +2,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
-import type { Calendar, DayInfo, Profile, Task, ViewMode } from '../../types';
+import type { Calendar, DayInfo, Profile, Task, User, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
 import CalendarHeader from './CalendarHeader';
 import ViewModeSelector from './ViewModeSelector';
@@ -15,7 +15,7 @@ import CalendarModal from '../CalendarModal';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
-import { usePermission } from '../../hooks/usePermission'; // Importar hook
+import { usePermission } from '../../hooks/usePermission'; 
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -45,77 +45,137 @@ const CalendarBody = styled.div`
   background-color: ${({ theme }) => theme.colors.surface};
   border-bottom-left-radius: ${({ theme }) => theme.borderRadius};
   border-bottom-right-radius: ${({ theme }) => theme.borderRadius};
-  overflow: hidden; // Ensures content respects border radius
+  overflow: hidden; 
   box-shadow: ${({ theme }) => theme.boxShadow};
-  position: relative; // For positioning loading/empty states
+  position: relative; 
 `;
 
 const ViewWrapper = styled.div`
   flex-grow: 1;
-  overflow-y: auto; // Allow internal scrolling for views like task list
-  padding: ${({ theme }) => theme.spacing.md}; // Inner padding for the view content
+  overflow-y: auto; 
+  padding: ${({ theme }) => theme.spacing.md}; 
   position: relative;
   & > * {
-    height: 100%; // Make sure children take full height if needed
+    height: 100%; 
   }
 `;
 
+// NOVO: Componente de filtro de usuário
+const FilterContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: ${({ theme }) => theme.spacing.md};
+  align-items: center;
+  gap: ${({ theme }) => theme.spacing.sm};
+`;
+
+const FilterLabel = styled.label`
+  font-weight: 500;
+  color: ${({ theme }) => theme.colors.textSecondary};
+`;
+
+const FilterSelect = styled.select`
+  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
+  border-radius: ${({ theme }) => theme.borderRadius};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+`;
+
+
 const CalendarScreen: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date()); // For highlighting in mini-calendar/month view
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('month');
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
-  const [allTasks, setAllTasks] = useState<Task[]>([]); // Using mock data
+  const [allTasks, setAllTasks] = useState<Task[]>([]);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const navigate = useNavigate();
-  // Estados para o modal de tarefa
+
+  // Estados para modais
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [initialDateForNewTask, setInitialDateForNewTask] = useState<Date | undefined>(undefined);
-
-  // calendarios
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
+  
+  // NOVO: Estados para o filtro de usuário
+  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [selectedUserIdFilter, setSelectedUserIdFilter] = useState<string>('');
+
   const canViewAnyCalendar = usePermission('view', 'calendars', user.user.profile as Profile);
 
-  // O useMemo para `tasks` já filtra baseado nos calendários visíveis, o que é perfeito.
-  const tasks = useMemo(() => {
-    return allTasks.filter(task => calendars.find(calendar => Number(calendar.id) === Number(task.calendar_id))?.visible );
-  }, [allTasks, calendars]);
+  const fetchAllUsers = useCallback(async () => {
+    try {
+      const response = await api.get('/user', { headers: { Authorization: `Bearer ${user.token}` } });
+      setAllUsers(response.data);
+    } catch (err) {
+      console.error("Erro ao buscar usuários:", err);
+    }
+  }, [user.token]);
+
+  const fetchAllCalendars = useCallback(async () => {
+    try {
+      const req = await api.get("/calendar", { headers: { Authorization: `Bearer ${user.token}` } });
+      const allCalendars = req.data as Array<Calendar>;
+      const permittedCalendars = allCalendars.filter(calendar => 
+        usePermission('view', `calendar_${calendar.id}`, user.user.profile as Profile)
+      );
+      setCalendars(canViewAnyCalendar ? allCalendars : permittedCalendars);
+    } catch(err) {
+      console.log(err);
+    }
+  }, [user.token, canViewAnyCalendar]);
 
   const fetchAllTaskas = useCallback(async () => {
     try{
+      // NOVO: Adiciona o filtro de usuário à requisição
+      const params = new URLSearchParams();
+      if (selectedUserIdFilter) {
+        // A chave 'user_id' e o modelo 'Events' devem corresponder ao que o backend espera
+        const filterValue = `{"user_id": ${selectedUserIdFilter}}`;
+        params.append('filters', filterValue);
+        params.append('model', 'Events');
+      }
+
       const req = await api.get("/event", {
-        headers: {
-          Authorization: `Bearer ${user.token}`
-        }
+        headers: { Authorization: `Bearer ${user.token}` },
+        params
       });
       const tasks = req.data as Array<Task>;
       setAllTasks(tasks);
     }catch(err){
       console.log(err);
     }
-  }, [user]);
+  }, [user, selectedUserIdFilter]); // Adiciona o filtro como dependência
 
-  const fetchAllCalendars = useCallback(async () => {
-    try {
-      const req = await api.get("/calendar", { headers: { Authorization: `Bearer ${user.token}` } });
-      const allCalendars = req.data as Array<Calendar>;
+  // MELHORADO: A lógica de filtragem de tarefas agora é mais clara e segura.
+  const tasks = useMemo(() => {
+    // Cria um conjunto de IDs de calendários permitidos para busca rápida
+    const permittedCalendarIds = new Set(calendars.map(c => Number(c.id)));
+    
+    return allTasks.filter(task => {
+      // 1. A tarefa deve pertencer a um calendário que o usuário tem permissão para ver
+      const hasPermission = permittedCalendarIds.has(Number(task.calendar_id));
+      if (!hasPermission) return false;
 
-      // Filtra os calendários com base na permissão do usuário
-      const permittedCalendars = allCalendars.filter(calendar => 
-        // Permite se o usuário tem permissão geral ou permissão específica para este calendário
-        usePermission('view', `calendar_${calendar.id}`, user.user.profile as Profile)
-      );
+      // 2. O calendário ao qual a tarefa pertence deve estar marcado como 'visível'
+      const calendarOfTask = calendars.find(c => Number(c.id) === Number(task.calendar_id));
+      const isVisible = calendarOfTask?.visible ?? false; // Garante que é um booleano
 
-      // Se o usuário tiver a permissão geral `view` em `calendars`, mostramos todos.
-      // Caso contrário, mostramos apenas os permitidos especificamente.
-      setCalendars(canViewAnyCalendar ? allCalendars : permittedCalendars);
+      return isVisible;
+    });
+  }, [allTasks, calendars]);
 
-    } catch(err) {
-      console.log(err);
+
+  useEffect(() => {
+    if(!user.isLoggedIn){
+        navigate("/login");            
+    } else {
+      fetchAllTaskas();
+      fetchAllCalendars();
+      fetchAllUsers();
     }
-  }, [user.token, canViewAnyCalendar]);
+  }, [user, navigate, fetchAllTaskas, fetchAllCalendars, fetchAllUsers]);
+
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {
@@ -126,9 +186,8 @@ const CalendarScreen: React.FC = () => {
           return direction === 'prev' ? subWeeks(prevDate, 1) : addWeeks(prevDate, 1);
         case 'day':
           return direction === 'prev' ? subDays(prevDate, 1) : addDays(prevDate, 1);
-        case 'tasks':
         default:
-          return prevDate; // No date navigation for tasks view
+          return prevDate;
       }
     });
   }, [viewMode]);
@@ -157,11 +216,9 @@ const CalendarScreen: React.FC = () => {
 
   const handleDateClick = useCallback((date: Date) => {
     setSelectedDate(date);
-    setCurrentDate(date); // Optionally change current date to show selected date's month/week
-    // setViewMode('day'); // Optionally switch to day view when a day is clicked
+    setCurrentDate(date);
   }, []);
 
-  // Abre o modal para criar uma nova tarefa em uma data específica
   const handleOpenCreateTaskModal = useCallback((date: Date) => {
     handleDateClick(date);
     setInitialDateForNewTask(date);
@@ -169,10 +226,9 @@ const CalendarScreen: React.FC = () => {
     setIsTaskModalOpen(true);
   }, [handleDateClick]);
 
-  // Abre o modal para editar uma tarefa existente
   const handleOpenEditTaskModal = useCallback((task: Task) => {
     setTaskToEdit(task);
-    setInitialDateForNewTask(undefined); // Não relevante para edição
+    setInitialDateForNewTask(undefined);
     setIsTaskModalOpen(true);
   }, []);
 
@@ -193,16 +249,14 @@ const CalendarScreen: React.FC = () => {
         days = getWeekDays(currentDate);
         break;
       case 'day':
-        days = [getDayInfo(currentDate)]; // Single day
+        days = [getDayInfo(currentDate)];
         break;
       case 'tasks':
-        // Task view handles its own internal date grouping
         return <TaskViewByDate tasks={tasks} onTaskClick={handleOpenEditTaskModal} />;
       default:
         days = getMonthDays(currentDate);
     }
 
-    // Distribute tasks into dayInfos
     const daysWithTasks = days.map(dayInfo => ({
       ...dayInfo,
       tasks: getTasksForDate(tasks, dayInfo.date),
@@ -212,46 +266,39 @@ const CalendarScreen: React.FC = () => {
       return (
         <MonthView
           days={daysWithTasks}
-          onDayClick={handleOpenCreateTaskModal} // Abre modal de criação
-          onTaskClick={handleOpenEditTaskModal}  // Abre modal de edição
+          onDayClick={handleOpenCreateTaskModal}
+          onTaskClick={handleOpenEditTaskModal}
         />
       );
     }
-    // TODO: Implement DayView and WeekView similarly
     if (viewMode === 'day') {
-        // Simple day view for demonstration
         const todayInfo = daysWithTasks[0] || getDayInfo(currentDate);
-        return (
-            <TaskViewByDate tasks={todayInfo.tasks} onTaskClick={handleOpenEditTaskModal} />
-        );
+        return <TaskViewByDate tasks={todayInfo.tasks} onTaskClick={handleOpenEditTaskModal} />;
     }
     if (viewMode === 'week') {
-        // Simple week view for demonstration, showing tasks grouped by day
-        return (
-            <TaskViewByDate tasks={daysWithTasks.flatMap(day => day.tasks)} onTaskClick={handleOpenEditTaskModal} />
-        );
+        return <TaskViewByDate tasks={daysWithTasks.flatMap(day => day.tasks)} onTaskClick={handleOpenEditTaskModal} />;
     }
-    return null; // Fallback
+    return null;
   }, [currentDate, viewMode, tasks, handleOpenCreateTaskModal, handleOpenEditTaskModal]);
-
-  useEffect(() => {
-    try{
-        if(!user.isLoggedIn){
-            navigate("/login");            
-        }
-    }catch(err){
-        console.log(err);
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
-    fetchAllTaskas();
-    fetchAllCalendars();
-  }, [fetchAllTaskas, fetchAllCalendars]);
 
   return (
     <CalendarContainer>
       <MainContent>
+        {/* NOVO: Adiciona o seletor de filtro */}
+        <FilterContainer>
+            <FilterLabel htmlFor="user-filter">Filtrar por usuário:</FilterLabel>
+            <FilterSelect 
+              id="user-filter"
+              value={selectedUserIdFilter}
+              onChange={e => setSelectedUserIdFilter(e.target.value)}
+            >
+              <option value="">Todos</option>
+              {allUsers.map(u => (
+                <option key={u.id} value={u.id}>{u.name}</option>
+              ))}
+            </FilterSelect>
+        </FilterContainer>
+
         <ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />
         <CalendarBody>
           <CalendarHeader
@@ -274,17 +321,16 @@ const CalendarScreen: React.FC = () => {
         onDateChange={(date) => {
           setCurrentDate(date);
           setSelectedDate(date);
-          setViewMode('month'); // Usually mini-calendar jumps to month view of selected date
+          setViewMode('month');
         }}
         onUpdate={() => {
           fetchAllTaskas();
           fetchAllCalendars();
         }}
         selectedDate={selectedDate}
-        tasks={tasks}
+        tasks={tasks} // Passa a lista de tarefas já filtrada
         onTaskClick={handleOpenEditTaskModal}
       />
-      {/* O modal de tarefa */}
       { isTaskModalOpen ? (
         <TaskModal
           isOpen={isTaskModalOpen}
