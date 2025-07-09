@@ -10,6 +10,7 @@ import ActivityIndicator from '../ActivityIndicator';
 import UserModal from './UserModal'; // To be created
 import { FaPlus, FaEdit, FaTrash } from 'react-icons/fa';
 import { usePermission } from '../../hooks/usePermission';
+import FilterBar, { type FilterOption } from '../Common/FilterBar';
 
 // --- ESTILOS ---
 const UserManagementContainer = styled(Card)`
@@ -66,12 +67,15 @@ const UserManagement: React.FC = () => {
     const canCreateUsers = usePermission('create', 'users', authUser.user.profile as Profile);
     const canUpdateUsers = usePermission('update', 'users', authUser.user.profile as Profile);
     const canDeleteUsers = usePermission('delete', 'users', authUser.user.profile as Profile);
+    const [userFilters, setUserFilters] = useState<string>('');
 
+    // ATUALIZADO: fetchUsers agora usa o estado `userFilters`
     const fetchUsers = useCallback(async () => {
         setIsLoading(true);
         try {
             const response = await api.get('/user', {
-                headers: { Authorization: `Bearer ${authUser.token}` }
+                headers: { Authorization: `Bearer ${authUser.token}` },
+                params: { filters: userFilters }
             });
             setUsers(response.data);
         } catch (error) {
@@ -80,7 +84,7 @@ const UserManagement: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [authUser]);
+    }, [authUser.token, userFilters]);
 
     useEffect(() => {
         fetchUsers();
@@ -117,6 +121,11 @@ const UserManagement: React.FC = () => {
         }
     };
 
+    const userFilterOptions: FilterOption[] = [
+      { key: 'name', label: 'Nome', type: 'text', operator: 'ct' },
+      { key: 'email', label: 'Email', type: 'text', operator: 'ct' },
+    ];
+
     return (
         <UserManagementContainer>
             <Header>
@@ -127,6 +136,8 @@ const UserManagement: React.FC = () => {
                   </Button>
                 )}
             </Header>
+
+            <FilterBar filters={userFilterOptions} onApplyFilters={setUserFilters} />
 
             {isLoading ? (
                 <ActivityIndicator />

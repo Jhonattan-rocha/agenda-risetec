@@ -10,6 +10,7 @@ import ActivityIndicator from '../ActivityIndicator';
 import { FaPlus, FaEdit, FaSave, FaTrash } from 'react-icons/fa';
 import ProfileModal from './ProfileModal'; // IMPORTA O NOVO MODAL
 import { usePermission } from '../../hooks/usePermission'; // Importar hook
+import FilterBar, { type FilterOption } from '../Common/FilterBar';
 
 // --- ESTILOS ---
 
@@ -122,12 +123,14 @@ const ProfileManagement: React.FC = () => {
 
   // NOVO: Estado para armazenar todos os calendários do sistema
   const [allCalendars, setAllCalendars] = useState<Calendar[]>([]);
+  const [profileFilters, setProfileFilters] = useState<string>('');
 
   const fetchProfiles = useCallback(async () => {
     setIsLoading(true);
     try {
       const response = await api.get('/user_profile/', {
-        headers: { Authorization: `Bearer ${user.token}` }
+        headers: { Authorization: `Bearer ${user.token}` },
+        params: { filters: profileFilters }
       });
       setProfiles(response.data);
       // Mantém o perfil selecionado se ele ainda existir na lista
@@ -282,11 +285,18 @@ const ProfileManagement: React.FC = () => {
     setSelectedProfile(profile);
   };
 
+  const profileFilterOptions: FilterOption[] = [
+    { key: 'name', label: 'Nome do Perfil', type: 'text', operator: 'ct' }
+  ];
+
   return (
     <>
       <ProfileLayout>
         <ProfileListContainer>
           <h3>Perfis</h3>
+
+          <FilterBar filters={profileFilterOptions} onApplyFilters={setProfileFilters} />
+
           {isLoading && profiles.length === 0 ? <ActivityIndicator /> : (
             profiles.map(profile => (
               <ProfileListItem

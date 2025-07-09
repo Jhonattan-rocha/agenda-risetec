@@ -16,6 +16,7 @@ import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission'; 
+import FilterBar, { type FilterOption } from '../Common/FilterBar';
 
 const CalendarContainer = styled.div`
   display: flex;
@@ -60,27 +61,6 @@ const ViewWrapper = styled.div`
   }
 `;
 
-// NOVO: Componente de filtro de usuário
-const FilterContainer = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-  align-items: center;
-  gap: ${({ theme }) => theme.spacing.sm};
-`;
-
-const FilterLabel = styled.label`
-  font-weight: 500;
-  color: ${({ theme }) => theme.colors.textSecondary};
-`;
-
-const FilterSelect = styled.select`
-  padding: ${({ theme }) => theme.spacing.xs} ${({ theme }) => theme.spacing.sm};
-  border-radius: ${({ theme }) => theme.borderRadius};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-`;
-
-
 const CalendarScreen: React.FC = () => {
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -99,7 +79,7 @@ const CalendarScreen: React.FC = () => {
   
   // NOVO: Estados para o filtro de usuário
   const [allUsers, setAllUsers] = useState<User[]>([]);
-  const [selectedUserIdFilter, setSelectedUserIdFilter] = useState<string>('');
+  const [taskFilters, setTaskFilters] = useState<string>('');
 
   const canViewAnyCalendar = usePermission('view', 'calendars', user.user.profile as Profile);
 
@@ -126,26 +106,17 @@ const CalendarScreen: React.FC = () => {
   }, [user.token, canViewAnyCalendar]);
 
   const fetchAllTaskas = useCallback(async () => {
-    try{
-      // NOVO: Adiciona o filtro de usuário à requisição
-      const params = new URLSearchParams();
-      if (selectedUserIdFilter) {
-        // A chave 'user_id' e o modelo 'Events' devem corresponder ao que o backend espera
-        const filterValue = `{"user_id": ${selectedUserIdFilter}}`;
-        params.append('filters', filterValue);
-        params.append('model', 'Events');
-      }
-
+    try {
       const req = await api.get("/event", {
         headers: { Authorization: `Bearer ${user.token}` },
-        params
+        // Passa a string de filtro para a API
+        params: { filters: taskFilters, limit: 1000 } 
       });
-      const tasks = req.data as Array<Task>;
-      setAllTasks(tasks);
-    }catch(err){
+      setAllTasks(req.data as Array<Task>);
+    } catch(err) {
       console.log(err);
     }
-  }, [user, selectedUserIdFilter]); // Adiciona o filtro como dependência
+  }, [user.token, taskFilters]); 
 
   // MELHORADO: A lógica de filtragem de tarefas agora é mais clara e segura.
   const tasks = useMemo(() => {
@@ -176,6 +147,19 @@ const CalendarScreen: React.FC = () => {
     }
   }, [user, navigate, fetchAllTaskas, fetchAllCalendars, fetchAllUsers]);
 
+  const taskFilterOptions = useMemo((): FilterOption[] => [
+    { key: 'title', label: 'Título da Tarefa', type: 'text', operator: 'ct' },
+    { key: 'status', label: 'Status', type: 'select', operator: 'eq', 
+      options: [
+        { value: 'confirmed', label: 'Confirmado' },
+        { value: 'tentative', label: 'Pendente' },
+        { value: 'cancelled', label: 'Cancelado' },
+      ]
+    },
+    { key: 'user_id', label: 'Participante', type: 'select', operator: 'eq',
+      options: allUsers.map(u => ({ value: u.id, label: u.name }))
+    }
+  ], [allUsers]);
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
     setCurrentDate(prevDate => {
@@ -284,20 +268,10 @@ const CalendarScreen: React.FC = () => {
   return (
     <CalendarContainer>
       <MainContent>
-        {/* NOVO: Adiciona o seletor de filtro */}
-        <FilterContainer>
-            <FilterLabel htmlFor="user-filter">Filtrar por usuário:</FilterLabel>
-            <FilterSelect 
-              id="user-filter"
-              value={selectedUserIdFilter}
-              onChange={e => setSelectedUserIdFilter(e.target.value)}
-            >
-              <option value="">Todos</option>
-              {allUsers.map(u => (
-                <option key={u.id} value={u.id}>{u.name}</option>
-              ))}
-            </FilterSelect>
-        </FilterContainer>
+        <FilterBar 
+          filters={taskFilterOptions} 
+          onApplyFilters={setTaskFilters} 
+        />
 
         <ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />
         <CalendarBody>
