@@ -30,7 +30,7 @@ const SidebarContainer = styled.aside`
   flex-direction: column;
   gap: ${({ theme }) => theme.spacing.lg};
   overflow-y: auto;
-  height: calc(100vh - 61px); // Altura do header
+  height: calc(100vh - 61px);
 
   @media (max-width: 1200px) {
     width: 280px;

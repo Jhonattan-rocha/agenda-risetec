@@ -15,20 +15,20 @@ import CalendarModal from '../CalendarModal';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
-import { usePermission } from '../../hooks/usePermission'; 
-import FilterBar, { type FilterOption } from '../Common/FilterBar';
+import { usePermission } from '../../hooks/usePermission';
+import FilterModal, { type FilterOption } from '../FilterModal';
 
-const HEADER_HEIGHT = '45px'; // Altura aproximada do header superior
+const HEADER_HEIGHT = '45px';
 
 const CalendarContainer = styled.div`
   display: flex;
-  height: calc(100vh - ${HEADER_HEIGHT}); // Ocupa o espaço restante da tela
+  height: calc(100vh - ${HEADER_HEIGHT});
   background-color: ${({ theme }) => theme.colors.background};
   font-family: ${({ theme }) => theme.fonts.body};
 
   @media (max-width: 900px) {
-    flex-direction: column; // Empilha o conteúdo principal e a sidebar
-    height: auto; // Permite que a altura se ajuste ao conteúdo
+    flex-direction: column;
+    height: auto;
   }
 `;
 
@@ -37,12 +37,11 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   padding: ${({ theme }) => theme.spacing.lg};
-  overflow: hidden; // Garante que o conteúdo interno scrolle, não este container
-  min-width: 0; // Previne problemas de overflow do flexbox
+  overflow: hidden;
 
   @media (max-width: 900px) {
     padding: ${({ theme }) => theme.spacing.md};
-    order: 1; // Garante que o calendário venha antes da sidebar
+    order: 1;
     overflow: visible;
   }
 `;
@@ -53,24 +52,24 @@ const CalendarBody = styled.div`
   flex-direction: column;
   background-color: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.borderRadius};
-  overflow: hidden; 
+  overflow: hidden;
   box-shadow: ${({ theme }) => theme.boxShadow};
-  position: relative; 
+  position: relative;
 `;
 
 const ViewWrapper = styled.div`
   flex-grow: 1;
-  overflow-y: auto; 
+  overflow-y: auto;
   position: relative;
-  padding: ${({ theme }) => theme.spacing.md}; 
-  
+  padding: ${({ theme }) => theme.spacing.md};
+
   @media (max-width: 900px) {
     overflow-y: visible;
     padding: ${({ theme }) => theme.spacing.sm};
   }
 
   & > * {
-    height: 100%; 
+    height: 100%;
   }
 `;
 
@@ -83,16 +82,15 @@ const CalendarScreen: React.FC = () => {
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const navigate = useNavigate();
 
-  // Estados para modais
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
   const [initialDateForNewTask, setInitialDateForNewTask] = useState<Date | undefined>(undefined);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
-  
-  // NOVO: Estados para o filtro de usuário
+
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [taskFilters, setTaskFilters] = useState<string>('');
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
   const canViewAnyCalendar = usePermission('view', 'calendars', user.user.profile as Profile);
 
@@ -109,7 +107,7 @@ const CalendarScreen: React.FC = () => {
     try {
       const req = await api.get("/calendar", { headers: { Authorization: `Bearer ${user.token}` } });
       const allCalendars = req.data as Array<Calendar>;
-      const permittedCalendars = allCalendars.filter(calendar => 
+      const permittedCalendars = allCalendars.filter(calendar =>
         usePermission('view', `calendar_${calendar.id}`, user.user.profile as Profile)
       );
       setCalendars(canViewAnyCalendar ? allCalendars : permittedCalendars);
@@ -122,28 +120,23 @@ const CalendarScreen: React.FC = () => {
     try {
       const req = await api.get("/event", {
         headers: { Authorization: `Bearer ${user.token}` },
-        // Passa a string de filtro para a API
-        params: { filters: taskFilters, limit: 1000 } 
+        params: { filters: taskFilters, limit: 1000 }
       });
       setAllTasks(req.data as Array<Task>);
     } catch(err) {
       console.log(err);
     }
-  }, [user.token, taskFilters]); 
+  }, [user.token, taskFilters]);
 
-  // MELHORADO: A lógica de filtragem de tarefas agora é mais clara e segura.
   const tasks = useMemo(() => {
-    // Cria um conjunto de IDs de calendários permitidos para busca rápida
     const permittedCalendarIds = new Set(calendars.map(c => Number(c.id)));
-    
+
     return allTasks.filter(task => {
-      // 1. A tarefa deve pertencer a um calendário que o usuário tem permissão para ver
       const hasPermission = permittedCalendarIds.has(Number(task.calendar_id));
       if (!hasPermission) return false;
 
-      // 2. O calendário ao qual a tarefa pertence deve estar marcado como 'visível'
       const calendarOfTask = calendars.find(c => Number(c.id) === Number(task.calendar_id));
-      const isVisible = calendarOfTask?.visible ?? false; // Garante que é um booleano
+      const isVisible = calendarOfTask?.visible ?? false;
 
       return isVisible;
     });
@@ -152,7 +145,7 @@ const CalendarScreen: React.FC = () => {
 
   useEffect(() => {
     if(!user.isLoggedIn){
-        navigate("/login");            
+        navigate("/login");
     } else {
       fetchAllTaskas();
       fetchAllCalendars();
@@ -169,9 +162,10 @@ const CalendarScreen: React.FC = () => {
         { value: 'cancelled', label: 'Cancelado' },
       ]
     },
-    { key: 'user_id', label: 'Participante', type: 'select', operator: 'eq',
+    { key: 'users.id', label: 'Participante', type: 'select', operator: 'eq',
       options: allUsers.map(u => ({ value: u.id, label: u.name }))
-    }
+    },
+    { key: 'location', label: 'Localização', type: 'text', operator: 'ct' }
   ], [allUsers]);
 
   const navigateDate = useCallback((direction: 'prev' | 'next') => {
@@ -189,22 +183,22 @@ const CalendarScreen: React.FC = () => {
     });
   }, [viewMode]);
 
-  const handleOpenCreateCalendarModal = () => {
-    setCalendarToEdit(null);
-    setIsCalendarModalOpen(true);
-  };
+    const handleOpenCreateCalendarModal = () => {
+        setCalendarToEdit(null);
+        setIsCalendarModalOpen(true);
+    };
 
-  const handleOpenEditCalendarModal = (calendar: Calendar) => {
-    setCalendarToEdit(calendar);
-    setIsCalendarModalOpen(true);
-  };
+    const handleOpenEditCalendarModal = (calendar: Calendar) => {
+        setCalendarToEdit(calendar);
+        setIsCalendarModalOpen(true);
+    };
 
-  const handleCloseCalendarModal = () => {
-    setIsCalendarModalOpen(false);
-    setCalendarToEdit(null);
-    fetchAllCalendars();
-    fetchAllTaskas();
-  };
+    const handleCloseCalendarModal = () => {
+        setIsCalendarModalOpen(false);
+        setCalendarToEdit(null);
+        fetchAllCalendars();
+        fetchAllTaskas();
+    };
 
   const handleTodayClick = useCallback(() => {
     setCurrentDate(new Date());
@@ -216,25 +210,25 @@ const CalendarScreen: React.FC = () => {
     setCurrentDate(date);
   }, []);
 
-  const handleOpenCreateTaskModal = useCallback((date: Date) => {
-    handleDateClick(date);
-    setInitialDateForNewTask(date);
-    setTaskToEdit(null);
-    setIsTaskModalOpen(true);
-  }, [handleDateClick]);
+    const handleOpenCreateTaskModal = useCallback((date: Date) => {
+        handleDateClick(date);
+        setInitialDateForNewTask(date);
+        setTaskToEdit(null);
+        setIsTaskModalOpen(true);
+    }, [handleDateClick]);
 
-  const handleOpenEditTaskModal = useCallback((task: Task) => {
-    setTaskToEdit(task);
-    setInitialDateForNewTask(undefined);
-    setIsTaskModalOpen(true);
-  }, []);
+    const handleOpenEditTaskModal = useCallback((task: Task) => {
+        setTaskToEdit(task);
+        setInitialDateForNewTask(undefined);
+        setIsTaskModalOpen(true);
+    }, []);
 
-  const handleCloseTaskModal = useCallback(() => {
-    setIsTaskModalOpen(false);
-    setTaskToEdit(null);
-    setInitialDateForNewTask(undefined);
-    fetchAllTaskas();
-  }, [fetchAllTaskas]);
+    const handleCloseTaskModal = useCallback(() => {
+        setIsTaskModalOpen(false);
+        setTaskToEdit(null);
+        setInitialDateForNewTask(undefined);
+        fetchAllTaskas();
+    }, [fetchAllTaskas]);
 
   const renderCalendarView = useMemo(() => {
     let days: DayInfo[] = [];
@@ -281,11 +275,6 @@ const CalendarScreen: React.FC = () => {
   return (
     <CalendarContainer>
       <MainContent>
-        <FilterBar 
-          filters={taskFilterOptions} 
-          onApplyFilters={setTaskFilters} 
-        />
-
         <ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />
         <CalendarBody>
           <CalendarHeader
@@ -294,6 +283,7 @@ const CalendarScreen: React.FC = () => {
             onNext={() => navigateDate('next')}
             onToday={handleTodayClick}
             viewMode={viewMode}
+            onFilterClick={() => setIsFilterModalOpen(true)}
           />
           <ViewWrapper>
             {renderCalendarView}
@@ -315,7 +305,7 @@ const CalendarScreen: React.FC = () => {
           fetchAllCalendars();
         }}
         selectedDate={selectedDate}
-        tasks={tasks} // Passa a lista de tarefas já filtrada
+        tasks={tasks}
         onTaskClick={handleOpenEditTaskModal}
       />
       { isTaskModalOpen ? (
@@ -333,6 +323,12 @@ const CalendarScreen: React.FC = () => {
           calendar={calendarToEdit}
         />
       ) : null }
+      <FilterModal
+          isOpen={isFilterModalOpen}
+          onClose={() => setIsFilterModalOpen(false)}
+          filters={taskFilterOptions}
+          onApplyFilters={setTaskFilters}
+      />
     </CalendarContainer>
   );
 };

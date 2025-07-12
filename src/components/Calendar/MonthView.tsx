@@ -38,7 +38,6 @@ const MonthGrid = styled.div`
 `;
 
 const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $hasTasks: boolean; }>`
-  min-height: 120px;
   height: 100%;
   background-color: ${props => props.$isCurrentMonth ? props.theme.colors.surface : props.theme.colors.background};
   color: ${props => props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary};

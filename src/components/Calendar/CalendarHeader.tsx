@@ -4,12 +4,14 @@ import styled from 'styled-components';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '../Common';
+import { FaFilter } from 'react-icons/fa';
 
 interface CalendarHeaderProps {
   currentDate: Date;
   onPrev: () => void;
   onNext: () => void;
   onToday: () => void;
+  onFilterClick: () => void;
   viewMode: 'month' | 'week' | 'day' | 'tasks';
 }
 
@@ -33,6 +35,7 @@ const HeaderContainer = styled.div`
 
 const Title = styled.h2`
   margin: 0;
+  margin-left: 10px;
   font-size: 1.5rem;
   color: ${({ theme }) => theme.colors.textPrimary};
   font-weight: 600;
@@ -82,6 +85,11 @@ const TodayButton = styled(Button)`
   }
 `;
 
+const FilterButton = styled(Button)`
+    margin-left: auto;
+    margin-right: ${({ theme }) => theme.spacing.md};
+`;
+
 
 const getHeaderTitle = (date: Date, viewMode: CalendarHeaderProps['viewMode']): string => {
   switch (viewMode) {
@@ -90,7 +98,7 @@ const getHeaderTitle = (date: Date, viewMode: CalendarHeaderProps['viewMode']): 
     case 'week': {
             const start = format(date, 'dd MMM', { locale: ptBR });
             const end = format(new Date(date.getFullYear(), date.getMonth(), date.getDate() + 6), 'dd MMM', { locale: ptBR });
-            return `${start} - ${end}`; 
+            return `${start} - ${end}`;
         }
     case 'day':
       return format(date, 'EEEE, dd \'de\' MMMM \'de\' yyyy', { locale: ptBR });
@@ -102,7 +110,7 @@ const getHeaderTitle = (date: Date, viewMode: CalendarHeaderProps['viewMode']): 
 };
 
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, onNext, onToday, viewMode }) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, onNext, onToday, viewMode, onFilterClick }) => {
   return (
     <HeaderContainer>
       <NavButtons>
@@ -110,6 +118,9 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, on
         <Button outline onClick={onNext}>&gt;</Button>
       </NavButtons>
       <Title>{getHeaderTitle(currentDate, viewMode)}</Title>
+      <FilterButton outline onClick={onFilterClick}>
+          <FaFilter />
+      </FilterButton>
       <TodayButton primary onClick={onToday}>Hoje</TodayButton>
     </HeaderContainer>
   );
