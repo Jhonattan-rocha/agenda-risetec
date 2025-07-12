@@ -18,12 +18,18 @@ import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission'; 
 import FilterBar, { type FilterOption } from '../Common/FilterBar';
 
+const HEADER_HEIGHT = '45px'; // Altura aproximada do header superior
+
 const CalendarContainer = styled.div`
   display: flex;
-  flex-grow: 1;
-  height: 100vh;
+  height: calc(100vh - ${HEADER_HEIGHT}); // Ocupa o espaço restante da tela
   background-color: ${({ theme }) => theme.colors.background};
   font-family: ${({ theme }) => theme.fonts.body};
+
+  @media (max-width: 900px) {
+    flex-direction: column; // Empilha o conteúdo principal e a sidebar
+    height: auto; // Permite que a altura se ajuste ao conteúdo
+  }
 `;
 
 const MainContent = styled.div`
@@ -31,11 +37,13 @@ const MainContent = styled.div`
   display: flex;
   flex-direction: column;
   padding: ${({ theme }) => theme.spacing.lg};
-  max-height: 100vh;
-  overflow: hidden;
+  overflow: hidden; // Garante que o conteúdo interno scrolle, não este container
+  min-width: 0; // Previne problemas de overflow do flexbox
 
   @media (max-width: 900px) {
     padding: ${({ theme }) => theme.spacing.md};
+    order: 1; // Garante que o calendário venha antes da sidebar
+    overflow: visible;
   }
 `;
 
@@ -44,8 +52,7 @@ const CalendarBody = styled.div`
   display: flex;
   flex-direction: column;
   background-color: ${({ theme }) => theme.colors.surface};
-  border-bottom-left-radius: ${({ theme }) => theme.borderRadius};
-  border-bottom-right-radius: ${({ theme }) => theme.borderRadius};
+  border-radius: ${({ theme }) => theme.borderRadius};
   overflow: hidden; 
   box-shadow: ${({ theme }) => theme.boxShadow};
   position: relative; 
@@ -54,8 +61,14 @@ const CalendarBody = styled.div`
 const ViewWrapper = styled.div`
   flex-grow: 1;
   overflow-y: auto; 
-  padding: ${({ theme }) => theme.spacing.md}; 
   position: relative;
+  padding: ${({ theme }) => theme.spacing.md}; 
+  
+  @media (max-width: 900px) {
+    overflow-y: visible;
+    padding: ${({ theme }) => theme.spacing.sm};
+  }
+
   & > * {
     height: 100%; 
   }

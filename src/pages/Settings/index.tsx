@@ -14,7 +14,7 @@ import type { Profile } from '../../types';
 const SettingsLayout = styled.div`
   display: flex;
   max-width: 1200px;
-  margin: 40px auto;
+  margin: 20px auto;
   padding: ${({ theme }) => theme.spacing.lg};
   gap: ${({ theme }) => theme.spacing.xl};
   background-color: ${({ theme }) => theme.colors.surface};
@@ -23,6 +23,9 @@ const SettingsLayout = styled.div`
 
   @media (max-width: 900px) {
     flex-direction: column;
+    padding: ${({ theme }) => theme.spacing.md};
+    margin: 10px;
+    gap: ${({ theme }) => theme.spacing.lg};
   }
 `;
 
@@ -42,6 +45,11 @@ const SettingsNav = styled.nav`
     padding-right: 0;
     padding-bottom: ${({ theme }) => theme.spacing.md};
     overflow-x: auto;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+    &::-webkit-scrollbar {
+      display: none; /* Chrome, Safari, and Opera */
+    }
   }
 `;
 
@@ -66,18 +74,35 @@ const NavItem = styled.a<{ $isActive: boolean }>`
   @media (max-width: 900px) {
     flex-shrink: 0;
     justify-content: center;
+    padding: ${({ theme }) => theme.spacing.sm} ${({ theme }) => theme.spacing.md};
+    span {
+      display: none; // Oculta o texto em telas muito pequenas
+    }
+  }
+  @media (min-width: 601px) and (max-width: 900px) {
+    span {
+      display: inline; // Mostra o texto em tablets
+    }
   }
 `;
 
 const SettingsContent = styled.main`
   flex-grow: 1;
+  min-width: 0; // Previne que o conteúdo force o layout a expandir
 `;
 
 const Header = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: ${({ theme }) => theme.spacing.xl};
+  max-width: 1200px;
+  margin: 40px auto 20px;
+  padding: 0 ${({ theme }) => theme.spacing.lg};
+
+  @media (max-width: 900px) {
+    margin: 20px auto 10px;
+    padding: 0 ${({ theme }) => theme.spacing.md};
+  }
 `;
 
 const Title = styled.h1`
@@ -89,19 +114,17 @@ const BackLink = styled(Link)`
   color: ${({ theme }) => theme.colors.primary};
 `;
 
-type Tab = 'profiles' | 'users' | 'appearance';
+type Tab = 'profiles' | 'users' | 'appearance' | 'integrations';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('appearance');
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const navigate = useNavigate();
 
-  // Verificações de permissão
   const canViewProfiles = usePermission('view', 'profiles', user.user.profile as Profile);
   const canViewUsers = usePermission('view', 'users', user.user.profile as Profile);
 
   useEffect(() => {
-    // Define a aba padrão com base nas permissões
     if (canViewProfiles) {
       setActiveTab('profiles');
     } else if (canViewUsers) {
@@ -129,31 +152,25 @@ const SettingsPage: React.FC = () => {
 
   return (
     <>
-      <Header style={{ maxWidth: 1200, margin: '40px auto 20px'}}>
+      <Header>
         <Title>Configurações</Title>
         <BackLink to="/">Voltar ao Calendário</BackLink>
       </Header>
       <SettingsLayout>
         <SettingsNav>
-          {/* Aba de Perfis */}
           {canViewProfiles && (
             <NavItem $isActive={activeTab === 'profiles'} onClick={() => setActiveTab('profiles')}>
-              <FaUsersCog /> Perfis
+              <FaUsersCog /> <span>Perfis</span>
             </NavItem>
           )}
-
-          {/* Aba de Usuários */}
           {canViewUsers && (
             <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
-              <FaUser /> Usuários
+              <FaUser /> <span>Usuários</span>
             </NavItem>
           )}
-          
-          {/* Aba de Aparência (geralmente visível para todos) */}
           <NavItem $isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>
-            <FaPalette /> Aparência
+            <FaPalette /> <span>Aparência</span>
           </NavItem>
-
         </SettingsNav>
         <SettingsContent>
           {renderContent()}

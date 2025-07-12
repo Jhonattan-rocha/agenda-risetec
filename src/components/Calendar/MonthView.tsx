@@ -18,6 +18,7 @@ const MonthGrid = styled.div`
   background-color: ${({ theme }) => theme.colors.border}; // Grid lines
   border-radius: ${({ theme }) => theme.borderRadius};
   overflow: hidden; // Ensures corners are rounded
+  height: 100%;
 
   .weekdays-header {
     display: contents; // Makes children act as direct grid items
@@ -37,8 +38,8 @@ const MonthGrid = styled.div`
 `;
 
 const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $hasTasks: boolean; }>`
-  min-height: 120px; // A bit more space for tasks
-  height: auto;
+  min-height: 120px;
+  height: 100%;
   background-color: ${props => props.$isCurrentMonth ? props.theme.colors.surface : props.theme.colors.background};
   color: ${props => props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary};
   padding: ${({ theme }) => theme.spacing.xs};
@@ -48,24 +49,24 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   align-items: flex-start;
   transition: background-color 0.2s ease, transform 0.1s ease;
   border: ${props => props.$isToday ? `2px solid ${props.theme.colors.primary}` : `1px solid ${props.theme.colors.border}`};
-  box-shadow: none; // Reset card default shadow for grid cells
+  box-shadow: none;
   position: relative;
-  overflow: hidden; // Hide overflow for task list
+  overflow: hidden;
 
   &:hover {
-    background-color: ${({ theme }) => theme.colors.primary}08; // Light overlay on hover
+    background-color: ${({ theme }) => theme.colors.primary}08;
     transform: translateY(-2px);
     box-shadow: ${({ theme }) => theme.boxShadow};
-    z-index: 1; // Bring hovered cell to front
+    z-index: 1;
   }
 
   .day-number {
-    font-size: 1.2rem;
+    font-size: 1rem;
     font-weight: ${props => props.$isToday ? 'bold' : 'normal'};
     color: ${props => props.$isToday ? props.theme.colors.primary : (props.$isCurrentMonth ? props.theme.colors.textPrimary : props.theme.colors.textSecondary)};
     width: 100%;
     text-align: right;
-    padding: ${({ theme }) => theme.spacing.xs};
+    padding: 2px;
     span {
       display: inline-block;
       width: 28px;
@@ -79,7 +80,7 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   .tasks-list {
     flex-grow: 1;
     width: 100%;
-    overflow-y: hidden; // Prevent individual cell scroll in month view
+    overflow-y: hidden;
     .more-tasks {
         font-size: 0.7rem;
         color: ${({ theme }) => theme.colors.textSecondary};
@@ -92,7 +93,7 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   @media (max-width: 768px) {
     min-height: 100px;
     .day-number {
-      font-size: 1rem;
+      font-size: 0.8rem;
       span {
         width: 24px;
         height: 24px;
@@ -101,6 +102,14 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
     }
     .tasks-list .task-item {
       font-size: 0.65rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    min-height: 80px;
+    .day-number { font-size: 0.7rem; }
+    .tasks-list .task-item {
+      padding: 1px 2px;
     }
   }
 `;
@@ -132,6 +141,10 @@ const AvatarStack = styled.div`
   display: flex;
   align-items: center;
   margin-left: auto;
+
+  @media (max-width: 480px) {
+    display: none; // Oculta avatares em telas muito pequenas
+  }
 `;
 
 const Avatar = styled.img`
@@ -139,7 +152,7 @@ const Avatar = styled.img`
   height: 16px;
   border-radius: 50%;
   border: 1px solid white;
-  margin-left: -6px; // Efeito de sobreposição
+  margin-left: -6px;
   
   &:first-child {
     margin-left: 0;

@@ -6,7 +6,7 @@ import UpcomingTasks from './UpcomingTasks';
 import type { Calendar, Task } from '../../types';
 import DailyTasks from './DailyTasks';
 import Calendars from './Calendars';
-import { isSameDay } from 'date-fns'; // NOVO: Importa isSameDay
+import { isSameDay } from 'date-fns';
 
 interface RightSidebarProps {
   currentDate: Date;
@@ -21,32 +21,40 @@ interface RightSidebarProps {
 }
 
 const SidebarContainer = styled.aside`
-  width: 300px;
+  width: 320px;
+  min-width: 300px;
   padding: ${({ theme }) => theme.spacing.lg};
   background-color: ${({ theme }) => theme.colors.background}; 
   border-left: 1px solid ${({ theme }) => theme.colors.border};
   display: flex;
   flex-direction: column;
-  gap: ${({ theme }) => theme.spacing.md};
+  gap: ${({ theme }) => theme.spacing.lg};
   overflow-y: auto;
+  height: calc(100vh - 61px); // Altura do header
 
   @media (max-width: 1200px) {
     width: 280px;
+    min-width: 280px;
     padding: ${({ theme }) => theme.spacing.md};
   }
 
   @media (max-width: 900px) {
     width: 100%;
+    height: auto;
+    max-height: 40vh; // Limita a altura em modo horizontal
     border-left: none;
     border-top: 1px solid ${({ theme }) => theme.colors.border};
     flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-wrap: nowrap; // Para permitir scroll horizontal
+    justify-content: flex-start;
+    align-items: stretch;
     padding: ${({ theme }) => theme.spacing.md};
+    gap: ${({ theme }) => theme.spacing.md};
+    overflow-x: auto;
+    
     & > * {
-      flex: 1 1 auto;
+      flex: 0 0 280px; // Largura fixa para cada item
       min-width: 250px;
-      max-width: 300px;
     }
   }
 `;
@@ -61,12 +69,10 @@ const RightSidebar: React.FC<RightSidebarProps> = ({ currentDate, onDateChange, 
         onCalendarClick={onCalendarClick}
         onUpdate={onUpdate}
       />
-      {/* CORRIGIDO: Usa isSameDay para uma comparação de data mais segura */}
       <DailyTasks 
         onTaskClik={onTaskClick} 
         tasks={tasks.filter(task => isSameDay(new Date(task.date), currentDate))}
       />
-      {/* O componente UpcomingTasks já recebe a lista 'tasks' corretamente filtrada por permissão */}
       <UpcomingTasks onTaskClik={onTaskClick} tasks={tasks} />
     </SidebarContainer>
   );
