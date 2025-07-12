@@ -497,6 +497,13 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
 
+"@types/node@^24.0.13":
+  version "24.0.13"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-24.0.13.tgz#93ed8c05c7b188a59760be0ce2ee3fa7ad0f83f6"
+  integrity sha512-Qm9OYVOFHFYg3wJoTSrz80hoec5Lia/dPp84do3X7dZvLikQvM1YpmvTBEdIr/e+U8HTkFjLHLnl78K/qjf+jQ==
+  dependencies:
+    undici-types "~7.8.0"
+
 "@types/react-dom@^19.1.5":
   version "19.1.6"
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-19.1.6.tgz#4af629da0e9f9c0f506fc4d1caa610399c595d64"
@@ -774,6 +781,11 @@ cross-spawn@^7.0.6:
     path-key "^3.1.0"
     shebang-command "^2.0.0"
     which "^2.0.1"
+
+crypto-js@^4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/crypto-js/-/crypto-js-4.2.0.tgz#4d931639ecdfd12ff80e8186dba6af2c2e856631"
+  integrity sha512-KALDyEYgpY+Rlob/iriUtjV6d5Eq+Y191A5g4UqLAi8CyGP9N1+FdVbkc1SxKc2r4YAYqG8JzO2KGL+AizD70Q==
 
 css-color-keywords@^1.0.0:
   version "1.0.0"
@@ -1273,6 +1285,11 @@ json-stable-stringify-without-jsonify@^1.0.1:
   resolved "https://registry.yarnpkg.com/json-stable-stringify-without-jsonify/-/json-stable-stringify-without-jsonify-1.0.1.tgz#9db7b59496ad3f3cfef30a75142d2d930ad72651"
   integrity sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==
 
+json-stringify-safe@^5.0.1:
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/json-stringify-safe/-/json-stringify-safe-5.0.1.tgz#1296a2d58fd45f19a0f6ce01d65701e2c735b6eb"
+  integrity sha512-ZClg6AaYvamvYEE82d3Iyd3vSSIjQ+odgjaTzRuO3s7toCdFKczob2i0zCh7JE8kWn17yvAWhUVxvqGwUalsRA==
+
 keyv@^4.5.4:
   version "4.5.4"
   resolved "https://registry.yarnpkg.com/keyv/-/keyv-4.5.4.tgz#a879a99e29452f942439f2a405e3af8b31d4de93"
@@ -1517,6 +1534,14 @@ react@^19.1.0:
   resolved "https://registry.yarnpkg.com/react/-/react-19.1.0.tgz#926864b6c48da7627f004795d6cce50e90793b75"
   integrity sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==
 
+redux-persist-transform-encrypt@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/redux-persist-transform-encrypt/-/redux-persist-transform-encrypt-5.1.1.tgz#fd167bdee0621aaed489f2ee059808450d4fb3c6"
+  integrity sha512-PN+yypR6fBVMEFBnwZmTN9rEovs+zmBojejIGF8WxP4Qt+Tt1MQtIUUkeUKoeG4QrMWoXtRYmbBkaWpKcdpXHg==
+  dependencies:
+    crypto-js "^4.2.0"
+    json-stringify-safe "^5.0.1"
+
 redux-persist@^6.0.0:
   version "6.0.0"
   resolved "https://registry.yarnpkg.com/redux-persist/-/redux-persist-6.0.0.tgz#b4d2972f9859597c130d40d4b146fecdab51b3a8"
@@ -1715,6 +1740,11 @@ typescript@~5.8.3:
   version "5.8.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.8.3.tgz#92f8a3e5e3cf497356f4178c34cd65a7f5e8440e"
   integrity sha512-p1diW6TqL9L07nNxvRMM7hMMw4c5XOo/1ibL4aAIGmSAt9slTE1Xgw5KWuof2uTOvCg9BY7ZRi+GaF+7sfgPeQ==
+
+undici-types@~7.8.0:
+  version "7.8.0"
+  resolved "https://registry.yarnpkg.com/undici-types/-/undici-types-7.8.0.tgz#de00b85b710c54122e44fbfd911f8d70174cd294"
+  integrity sha512-9UJ2xGDvQ43tYyVMpuHlsgApydB8ZKfVYTsLDhXkFL/6gfkp+U8xTGdh8pMJv1SpZna0zxG1DwsKZsreLbXBxw==
 
 uri-js@^4.2.2:
   version "4.4.1"
