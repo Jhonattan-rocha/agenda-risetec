@@ -208,6 +208,13 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, filters, onA
 
                 <ModalFooter>
                     <Button outline onClick={onClose}>Cancelar</Button>
+                    <Button outline onClick={() => {
+                        setGroups([
+                            { id: uuidv4(), operator: 'AND', rules: [{ id: uuidv4(), field: '', operator: 'ct', value: '' }] }
+                        ])
+                        onApplyFilters("");
+                        onClose()
+                    }}>Limpar</Button>
                     <Button primary onClick={handleApply}>Aplicar Filtros</Button>
                 </ModalFooter>
             </ModalContent>
