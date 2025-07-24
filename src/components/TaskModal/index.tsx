@@ -13,6 +13,8 @@ import { CheckboxGroup, ColorPickerContainer, ColorSwatch, FormGroup, Input, Lab
  } from './styled';
 import styled from 'styled-components';
 import { usePermission } from '../../hooks/usePermission';
+import RecurrenceModal from '../RecurrenceModal';
+import { rrulestr } from 'rrule';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -56,21 +58,29 @@ const FormRow = styled.div`
   }
 `;
 
+const RecurrenceButton = styled(Button).attrs({ type: 'button', outline: true })`
+    justify-content: flex-start;
+    text-align: left;
+    width: 100%;
+    color: ${({ theme }) => theme.colors.textPrimary};
+`;
+
 const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDate }) => {
   // ATUALIZADO: Estado inicial com os novos campos
   const [currentTask, setCurrentTask] = useState<Partial<Task>>({
     title: '',
     description: '',
     date: initialDate || new Date(),
+    endDate: undefined,
     isAllDay: false,
     startTime: '',
     endTime: '',
     color: predefinedColors[0],
     calendar_id: '',
     users: [],
-    location: '', // NOVO
-    status: 'confirmed', // NOVO
-    recurring_rule: '', // NOVO
+    location: '', 
+    status: 'confirmed', 
+    recurring_rule: '', 
   });
   const [users, setUsers] = useState<Array<User>>([]);
   const [calendars, setCalendars] = useState<Array<Calendar>>([]);
@@ -78,6 +88,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const isEditing = !!task;
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const calendarIdForPermission = currentTask.calendar_id || task?.calendar_id;
+  const [isRecurrenceModalOpen, setIsRecurrenceModalOpen] = useState(false); // Estado para o novo modal
 
   const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
   const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
@@ -91,10 +102,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       setCurrentTask({
         ...task,
         date: task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString()),
+        endDate: task.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : undefined,
         startTime: task.startTime || '',
         endTime: task.endTime || '',
         users: task.users || [],
-        // ATUALIZADO: Garante que os novos campos sejam populados ao editar
         location: task.location || '',
         status: task.status || 'confirmed',
         recurring_rule: task.recurring_rule || '',
@@ -104,13 +115,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         title: '',
         description: '',
         date: initialDate || new Date(),
+        endDate: undefined,
         isAllDay: false,
         startTime: '',
         endTime: '',
         color: predefinedColors[0],
         calendar_id: '',
         users: [],
-        // ATUALIZADO: Campos novos no estado inicial
         location: '',
         status: 'confirmed',
         recurring_rule: '',
@@ -148,34 +159,35 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   };
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const dateString = e.target.value;
-    setCurrentTask(prev => ({ ...prev, date: new Date(dateString + 'T12:00:00') }));
-  };
+    const { name, value } = e.target;
+    const dateValue = value ? new Date(value + 'T12:00:00') : undefined;
+    setCurrentTask(prev => ({ ...prev, [name]: dateValue }));
+};
 
   const handleSave = () => {
     if (!currentTask.title || !currentTask.date || !currentTask.calendar_id) {
-      alert('Título, Data e Calendário são obrigatórios.');
+      alert('Título, Data de Início e Calendário são obrigatórios.');
       return;
     }
     setIsLoading(true);
 
     const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
 
-    // ATUALIZADO: Payload inclui os novos campos
     const taskPayload = {
       id: currentTask.id || uuidv4(),
       title: currentTask.title,
       description: currentTask.description,
       date: currentTask.date,
+      endDate: currentTask.endDate,
       isAllDay: currentTask.isAllDay,
       startTime: currentTask.startTime,
       endTime: currentTask.endTime,
       color: currentTask.color,
       calendar_id: parseInt(String(currentTask.calendar_id), 10),
       user_ids: user_ids,
-      location: currentTask.location, // NOVO
-      status: currentTask.status, // NOVO
-      recurring_rule: currentTask.recurring_rule, // NOVO
+      location: currentTask.location, 
+      status: currentTask.status, 
+      recurring_rule: currentTask.recurring_rule, 
     };
 
     const req = isEditing 
@@ -226,6 +238,17 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     }
   }, [isOpen, fetchAllData]);
 
+  const getRecurrenceSummary = (rruleString?: string): string => {
+    if (!rruleString) {
+        return 'Nunca';
+    }
+    try {
+        // A biblioteca rrule tem uma tradução para pt, mas vamos usar o da lib date-fns para consistencia
+        return rrulestr(rruleString).toText();
+    } catch {
+        return 'Personalizado';
+    }
+  };
 
   if (!isOpen) return null;
 
@@ -242,7 +265,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
             <Input id="title" name="title" value={currentTask.title || ''} onChange={handleChange} required />
           </FormGroup>
 
-          {/* NOVO: Campo de Localização */}
           <FormGroup>
             <Label htmlFor="location">Localização</Label>
             <Input id="location" name="location" value={currentTask.location || ''} onChange={handleChange} placeholder="Ex: Sala de Reuniões 3" />
@@ -255,11 +277,17 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
           
           <FormRow>
             <FormGroup>
-              <Label htmlFor="date">Data</Label>
+              <Label htmlFor="date">Data de Início</Label>
               <Input id="date" name="date" type="date" value={currentTask.date ? format(currentTask.date, 'yyyy-MM-dd') : ''} onChange={handleDateChange} required />
             </FormGroup>
 
-            {/* NOVO: Campo de Status */}
+            <FormGroup>
+                <Label htmlFor="endDate">Data Final</Label>
+                <Input id="endDate" name="endDate" type="date" value={currentTask.endDate ? format(currentTask.endDate, 'yyyy-MM-dd') : ''} onChange={handleDateChange} />
+            </FormGroup>
+          </FormRow>
+
+          <FormRow>
             <FormGroup>
               <Label htmlFor="status">Status</Label>
               <Select id="status" name="status" value={currentTask.status} onChange={handleChange}>
@@ -268,6 +296,14 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
                 <option value="cancelled">Cancelado</option>
               </Select>
             </FormGroup>
+            
+              {/* SUBSTITUI O SELECT ANTIGO */}
+              <FormGroup>
+                <Label>Repetir</Label>
+                <RecurrenceButton onClick={() => setIsRecurrenceModalOpen(true)}>
+                    {getRecurrenceSummary(currentTask.recurring_rule)}
+                </RecurrenceButton>
+              </FormGroup>
           </FormRow>
 
           <CheckboxGroup>
@@ -343,6 +379,15 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
           </div>
         </ModalFooter>
       </ModalContent>
+
+      {/* Renderiza o novo modal de recorrência */}
+      <RecurrenceModal
+        isOpen={isRecurrenceModalOpen}
+        onClose={() => setIsRecurrenceModalOpen(false)}
+        onSave={(rule) => setCurrentTask(prev => ({ ...prev, recurring_rule: rule }))}
+        initialRRule={currentTask.recurring_rule}
+        startDate={currentTask.date || new Date()}
+      />
     </ModalOverlay>
   );
 };

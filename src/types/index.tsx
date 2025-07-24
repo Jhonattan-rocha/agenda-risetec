@@ -8,7 +8,6 @@ export interface Calendar {
   color: string;
   visible: boolean;
   tasks: Array<Task>;
-  // NOVOS CAMPOS
   description?: string;
   is_private?: boolean;
   owner_id?: string;
@@ -19,16 +18,16 @@ export interface Task {
   title: string;
   description?: string;
   date: Date;
+  endDate?: Date; // NOVO CAMPO
   isAllDay?: boolean;
   startTime?: string;
   endTime?: string;
   color?: string;
   calendar_id: string;
   users: User[];
-  // NOVOS CAMPOS
   location?: string;
   status?: 'confirmed' | 'tentative' | 'cancelled';
-  recurring_rule?: string; // Ex: "FREQ=WEEKLY;BYDAY=MO"
+  recurring_rule?: string;
   created_by?: string;
 }
 
@@ -62,7 +61,6 @@ export interface User {
   password?: string;
   profile_id: string;
   avatarUrl: string;
-  // NOVO CAMPO
   phone_number?: string;
   last_login?: Date;
 }
