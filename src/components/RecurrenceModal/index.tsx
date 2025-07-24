@@ -1,13 +1,13 @@
 // src/components/RecurrenceModal/index.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { Frequency, RRule, Weekday, type Options } from 'rrule';
-import { fromText } from 'rrule/dist/esm/nlp';
+import { RRule, Weekday, type Options, rrulestr, Frequency } from 'rrule';
 import { format, parseISO } from 'date-fns';
 import { Button } from '../Common';
 import {
     ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
     FormGroup, Label, Row, Select, Input, WeekdayButton, Summary
 } from './styled';
+import { toText } from 'rrule/dist/esm/nlp';
 
 interface RecurrenceModalProps {
   isOpen: boolean;
@@ -30,17 +30,24 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
 
     useEffect(() => {
         if (isOpen) {
+            // CORREÇÃO 1: Lógica para carregar o estado de edição de uma regra existente
             if (initialRRule) {
                 try {
-                    // CORREÇÃO 3: Usar .origOptions para pegar a configuração original da regra
-                    const ruleOptions = fromText(initialRRule).origOptions;
+                    const ruleOptions = rrulestr(initialRRule).origOptions;
                     setFreq(ruleOptions.freq as Frequency);
                     setInterval(ruleOptions.interval || 1);
-                    setWeekdays(ruleOptions.byweekday ? (Array.isArray(ruleOptions.byweekday) ? ruleOptions.byweekday as Weekday[] : [ruleOptions.byweekday as Weekday]) : [weekdayMap[startDate.getDay()]]);
+
+                    // Garante que byweekday seja sempre um array
+                    if (ruleOptions.byweekday) {
+                        const byweekdayArray = Array.isArray(ruleOptions.byweekday) ? ruleOptions.byweekday : [ruleOptions.byweekday];
+                        setWeekdays(byweekdayArray as Weekday[]);
+                    } else {
+                        setWeekdays([weekdayMap[startDate.getDay()]]);
+                    }
+
                     if (ruleOptions.until) {
                         setTerminationType('on');
                         const untilDate = new Date(ruleOptions.until);
-                        // Ajusta para o fuso horário local para exibir corretamente no input date
                         untilDate.setMinutes(untilDate.getMinutes() + untilDate.getTimezoneOffset());
                         setUntil(untilDate);
                         setCount(null);
@@ -55,7 +62,11 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
                     }
                 } catch (e) {
                     console.error("Erro ao parsear a regra de recorrência:", e);
+                    // Reseta para o padrão se a regra for inválida
+                    setFreq(RRule.WEEKLY);
+                    setInterval(1);
                     setWeekdays([weekdayMap[startDate.getDay()]]);
+                    setTerminationType('never');
                 }
             } else {
                 // Estado padrão para uma nova regra
@@ -77,6 +88,19 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
         );
     };
 
+    // CORREÇÃO 2: Lógica de limpeza de estado ao mudar o tipo de término
+    const handleTerminationChange = (type: 'never' | 'on' | 'after') => {
+        setTerminationType(type);
+        if (type === 'never') {
+            setUntil(null);
+            setCount(null);
+        } else if (type === 'on') {
+            setCount(null);
+        } else if (type === 'after') {
+            setUntil(null);
+        }
+    };
+
     const ruleSummary = useMemo(() => {
         try {
             const rule = new RRule({
@@ -87,8 +111,7 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
                 until,
                 count,
             });
-             // CORREÇÃO 4: A tradução agora funciona pois rrulestr foi importado do local correto
-            return rule.toText();
+            return toText(rule);
         } catch {
             return "Regra de repetição inválida.";
         }
@@ -99,7 +122,6 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
             onSave('');
             return;
         }
-        // CORREÇÃO 5: Usar o tipo 'Options' importado
         const options: Partial<Options> = {
             freq,
             interval,
@@ -167,17 +189,17 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
                     <Label>Termina em:</Label>
                     <div>
                         <Row>
-                            <input type="radio" id="never" name="termination" checked={terminationType === 'never'} onChange={() => setTerminationType('never')} />
+                            <input type="radio" id="never" name="termination" checked={terminationType === 'never'} onChange={() => handleTerminationChange('never')} />
                             <label htmlFor="never">Nunca</label>
                         </Row>
                         <Row>
-                            <input type="radio" id="after" name="termination" checked={terminationType === 'after'} onChange={() => setTerminationType('after')} />
+                            <input type="radio" id="after" name="termination" checked={terminationType === 'after'} onChange={() => handleTerminationChange('after')} />
                             <label htmlFor="after">Depois de</label>
                             <Input type="number" min="1" disabled={terminationType !== 'after'} value={count || ''} onChange={e => setCount(Number(e.target.value))} />
                             <span>ocorrências</span>
                         </Row>
                          <Row>
-                            <input type="radio" id="on" name="termination" checked={terminationType === 'on'} onChange={() => setTerminationType('on')} />
+                            <input type="radio" id="on" name="termination" checked={terminationType === 'on'} onChange={() => handleTerminationChange('on')} />
                             <label htmlFor="on">Em</label>
                             <Input type="date" disabled={terminationType !== 'on'} value={until ? format(until, 'yyyy-MM-dd') : ''} onChange={e => setUntil(e.target.value ? parseISO(e.target.value) : null)} />
                         </Row>

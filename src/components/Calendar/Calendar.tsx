@@ -1,7 +1,7 @@
 // src/components/Calendar/Calendar.tsx
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
-import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
+import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks, startOfMonth, endOfMonth } from 'date-fns';
 import type { Calendar, DayInfo, Profile, Task, User, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
 import CalendarHeader from './CalendarHeader';
@@ -130,45 +130,45 @@ const CalendarScreen: React.FC = () => {
   }, [user.token, taskFilters]);
 
   const tasks = useMemo(() => {
-    const visibleCalendarIds = new Set(calendars.filter(c => c.visible).map(c => Number(c.id)));
-    const expandedTasks: Task[] = [];
+      const visibleCalendarIds = new Set(calendars.filter(c => c.visible).map(c => Number(c.id)));
+      const expandedTasks: Task[] = [];
 
-    // Define a janela de tempo para expandir os eventos recorrentes (ex: 2 meses para trás, 6 para frente)
-    const rangeStart = subMonths(startOfMonth(currentDate), 2);
-    const rangeEnd = addMonths(endOfMonth(currentDate), 6);
+      const rangeStart = subMonths(startOfMonth(currentDate), 2);
+      const rangeEnd = addMonths(endOfMonth(currentDate), 6);
 
-    allTasks.forEach(task => {
-        if (!visibleCalendarIds.has(Number(task.calendar_id))) {
-            return;
-        }
+      allTasks.forEach(task => {
+          if (!visibleCalendarIds.has(Number(task.calendar_id))) {
+              return;
+          }
 
-        if (task.recurring_rule) {
-            try {
-                const rule = RRule.fromString(`DTSTART:${new Date(task.date).toISOString().replace(/[-:.]/g, '')}\n${task.recurring_rule}`);
-                
-                rule.between(rangeStart, rangeEnd).forEach((occurrenceDate, i) => {
-                    const duration = task.endDate ? new Date(task.endDate).getTime() - new Date(task.date).getTime() : 0;
-                    
-                    expandedTasks.push({
-                        ...task,
-                        id: `${task.id}-recur-${i}`, // Cria um ID único para a ocorrência
-                        date: occurrenceDate,
-                        endDate: task.endDate ? new Date(occurrenceDate.getTime() + duration) : undefined,
-                    });
-                });
+          if (task.recurring_rule) {
+              try {
+                  const options = RRule.parseString(task.recurring_rule);
+                  options.dtstart = new Date(task.date);
+                  const rule = new RRule(options);
 
-            } catch (e) {
-                console.error("Erro ao processar regra de recorrência:", e);
-                expandedTasks.push(task); // Adiciona o evento original se a regra falhar
-            }
-        } else {
-            expandedTasks.push(task);
-        }
-    });
+                  rule.between(rangeStart, rangeEnd).forEach((occurrenceDate, i) => {
+                      const duration = task.endDate ? new Date(task.endDate).getTime() - new Date(task.date).getTime() : 0;
+                      
+                      expandedTasks.push({
+                          ...task,
+                          id: `${task.id}-recur-${i}`,
+                          originalId: task.id, // <-- ADICIONADO AQUI
+                          date: occurrenceDate,
+                          endDate: task.endDate ? new Date(occurrenceDate.getTime() + duration) : undefined,
+                      });
+                  });
+              } catch (e) {
+                  console.error("Erro ao processar regra de recorrência:", e, task.recurring_rule);
+                  expandedTasks.push({ ...task, originalId: task.id }); // <-- ADICIONADO AQUI
+              }
+          } else {
+              expandedTasks.push({ ...task, originalId: task.id }); // <-- ADICIONADO AQUI
+          }
+      });
 
-    return expandedTasks;
+      return expandedTasks;
   }, [allTasks, calendars, currentDate]);
-
 
   useEffect(() => {
     if(!user.isLoggedIn){

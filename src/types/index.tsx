@@ -14,11 +14,12 @@ export interface Calendar {
 }
 
 export interface Task {
-  id: string;
+  id: string; // Este continuará sendo o ID único da ocorrência (ex: "1-recur-0")
+  originalId?: string; // NOVO CAMPO: Guardará o ID original do banco (ex: "1")
   title: string;
   description?: string;
   date: Date;
-  endDate?: Date; // NOVO CAMPO
+  endDate?: Date;
   isAllDay?: boolean;
   startTime?: string;
   endTime?: string;

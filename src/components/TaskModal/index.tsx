@@ -3,7 +3,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../Common';
 import type { Calendar, Profile, Task, User } from '../../types';
 import { format, parseISO } from 'date-fns';
-import { v4 as uuidv4 } from 'uuid';
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import api from '../../services/axios';
@@ -102,7 +101,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       setCurrentTask({
         ...task,
         date: task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString()),
-        endDate: task.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : undefined,
+        endDate: task.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : task.date ? task.date : undefined,
         startTime: task.startTime || '',
         endTime: task.endTime || '',
         users: task.users || [],
@@ -115,7 +114,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         title: '',
         description: '',
         date: initialDate || new Date(),
-        endDate: undefined,
+        endDate: initialDate || new Date(),
         isAllDay: false,
         startTime: '',
         endTime: '',
@@ -162,7 +161,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     const { name, value } = e.target;
     const dateValue = value ? new Date(value + 'T12:00:00') : undefined;
     setCurrentTask(prev => ({ ...prev, [name]: dateValue }));
-};
+  };
 
   const handleSave = () => {
     if (!currentTask.title || !currentTask.date || !currentTask.calendar_id) {
@@ -173,8 +172,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
     const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
 
+    // CORREÇÃO: Usar o ID original para o payload, mas manter o ID da ocorrência se não houver original
+    const eventIdForPayload = currentTask.originalId || currentTask.id;
+
     const taskPayload = {
-      id: currentTask.id || uuidv4(),
+      id: eventIdForPayload, // Envia o ID original no corpo
       title: currentTask.title,
       description: currentTask.description,
       date: currentTask.date,
@@ -185,14 +187,16 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       color: currentTask.color,
       calendar_id: parseInt(String(currentTask.calendar_id), 10),
       user_ids: user_ids,
-      location: currentTask.location, 
-      status: currentTask.status, 
-      recurring_rule: currentTask.recurring_rule, 
+      location: currentTask.location,
+      status: currentTask.status,
+      recurring_rule: currentTask.recurring_rule,
     };
 
-    const req = isEditing 
-      ? api.put(`/event/${taskPayload.id}`, taskPayload, { headers: { Authorization: `Bearer ${user.token}` }})
-      : api.post("/event", taskPayload, { headers: { Authorization: `Bearer ${user.token}` }});
+    // CORREÇÃO: Usa o ID original na URL para PUT, e a rota padrão para POST
+    const url = isEditing ? `/event/${eventIdForPayload}` : "/event";
+    const method = isEditing ? 'put' : 'post';
+
+    const req = api[method](url, taskPayload, { headers: { Authorization: `Bearer ${user.token}` }});
     
     req.then(() => {
       setIsLoading(false);
@@ -204,9 +208,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   };
 
   const handleDelete = () => {
-    if (task?.id && window.confirm('Tem certeza que deseja excluir esta tarefa?')) {
+    // CORREÇÃO: Usa o ID original para a deleção
+    const eventIdToDelete = task?.originalId || task?.id;
+    if (eventIdToDelete && window.confirm('Tem certeza que deseja excluir esta tarefa e todas as suas repetições?')) {
       setIsLoading(true);
-      api.delete(`/event/${task.id}`, { headers: { Authorization: `Bearer ${user.token}` }})
+      api.delete(`/event/${eventIdToDelete}`, { headers: { Authorization: `Bearer ${user.token}` }})
       .then(() => {
         setIsLoading(false);
         onClose();
