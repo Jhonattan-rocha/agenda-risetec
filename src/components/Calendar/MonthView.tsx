@@ -1,7 +1,7 @@
 // src/components/Calendar/MonthView.tsx
 import React from 'react';
 import styled from 'styled-components';
-import { format } from 'date-fns';
+import { format, isSameDay } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
 import { Card } from '../Common';
 
@@ -113,7 +113,7 @@ const DayCell = styled(Card)<{ $isCurrentMonth: boolean; $isToday: boolean; $has
   }
 `;
 
-const TaskItem = styled.div<{ $color: string }>`
+const TaskItem = styled.div<{ $color: string; $isContinuation: boolean; }>`
   display: flex;
   align-items: center;
   gap: 4px;
@@ -126,7 +126,7 @@ const TaskItem = styled.div<{ $color: string }>`
   text-overflow: ellipsis;
   background-color: ${props => props.$color}20;
   color: ${({ theme }) => theme.colors.textPrimary};
-  border-left: 3px solid ${props => props.$color};
+  border-left: 3px ${props => props.$isContinuation ? 'dashed' : 'solid'} ${props => props.$color};
 `;
 
 const TaskTitle = styled.span`
@@ -185,25 +185,29 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
               <span>{format(dayInfo.date, 'd')}</span>
             </div>
             <div className="tasks-list">
-              {displayedTasks.map(task => (
-                <TaskItem
-                  key={task.id}
-                  $color={String(task.color)}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onTaskClick(task);
-                  }}
-                >
-                  <TaskTitle>
-                    {task.isAllDay ? task.title : `${task.startTime} ${task.title}`}
-                  </TaskTitle>
-                  <AvatarStack>
-                    {task.users?.slice(0, 2).map(user => (
-                      <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
-                    ))}
-                  </AvatarStack>
-                </TaskItem>
-              ))}
+              {displayedTasks.map(task => {
+                const isContinuation = !isSameDay(new Date(task.date), dayInfo.date);
+                return (
+                    <TaskItem
+                        key={task.id}
+                        $color={String(task.color)}
+                        $isContinuation={isContinuation}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onTaskClick(task);
+                        }}
+                    >
+                    <TaskTitle>
+                        {task.isAllDay || isContinuation ? task.title : `${task.startTime} ${task.title}`}
+                    </TaskTitle>
+                    <AvatarStack>
+                        {task.users?.slice(0, 2).map(user => (
+                        <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
+                        ))}
+                    </AvatarStack>
+                    </TaskItem>
+                );
+              })}
               {remainingTasksCount > 0 && (
                 <div className="more-tasks">
                   +{remainingTasksCount} mais

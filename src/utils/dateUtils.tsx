@@ -13,6 +13,9 @@ import {
   getDay,
   parseISO,
   isToday as checkIsToday,
+  isWithinInterval,
+  startOfDay,
+  endOfDay,
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import type { Task, DayInfo } from '../types';
@@ -78,12 +81,26 @@ export const formatTime = (date: Date | string): string => {
 };
 
 export const getTasksForDate = (tasks: Task[], date: Date): Task[] => {
-  return tasks.filter(task => isSameDay(task.date, date)).sort((a, b) => {
-    if (a.isAllDay && !b.isAllDay) return -1;
-    if (!a.isAllDay && b.isAllDay) return 1;
-    if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
-    return 0;
-  });
+    const dayStart = startOfDay(date);
+
+    return tasks.filter(task => {
+        const taskStart = startOfDay(new Date(task.date));
+        
+        // Se for um evento de dia único (sem endDate)
+        if (!task.endDate) {
+            return isSameDay(taskStart, dayStart);
+        }
+        
+        const taskEnd = endOfDay(new Date(task.endDate));
+        
+        // Se for um evento de múltiplos dias, verifica se o dia atual está no intervalo
+        return isWithinInterval(dayStart, { start: taskStart, end: taskEnd });
+    }).sort((a, b) => {
+        if (a.isAllDay && !b.isAllDay) return -1;
+        if (!a.isAllDay && b.isAllDay) return 1;
+        if (a.startTime && b.startTime) return a.startTime.localeCompare(b.startTime);
+        return 0;
+    });
 };
 
 export const getDaysInMonth = (date: Date): DayInfo[] => {

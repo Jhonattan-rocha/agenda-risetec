@@ -1,7 +1,7 @@
 // src/components/Calendar/Calendar.tsx
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
-import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks } from 'date-fns';
+import { addMonths, subMonths, addDays, subDays, addWeeks, subWeeks, startOfMonth, endOfMonth, startOfWeek, endOfWeek } from 'date-fns';
 import type { Calendar, DayInfo, Profile, Task, User, ViewMode } from '../../types';
 import { getMonthDays, getWeekDays, getDayInfo, getTasksForDate } from '../../utils/dateUtils';
 import CalendarHeader from './CalendarHeader';
@@ -17,6 +17,7 @@ import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission';
 import FilterModal, { type FilterOption } from '../FilterModal';
+import { RRule } from 'rrule';
 
 const HEADER_HEIGHT = '45px';
 
@@ -114,7 +115,7 @@ const CalendarScreen: React.FC = () => {
     } catch(err) {
       console.log(err);
     }
-  }, [user.token, canViewAnyCalendar]);
+  }, [user.token, user.user.profile, canViewAnyCalendar]);
 
   const fetchAllTaskas = useCallback(async () => {
     try {
@@ -129,18 +130,44 @@ const CalendarScreen: React.FC = () => {
   }, [user.token, taskFilters]);
 
   const tasks = useMemo(() => {
-    const permittedCalendarIds = new Set(calendars.map(c => Number(c.id)));
+    const visibleCalendarIds = new Set(calendars.filter(c => c.visible).map(c => Number(c.id)));
+    const expandedTasks: Task[] = [];
 
-    return allTasks.filter(task => {
-      const hasPermission = permittedCalendarIds.has(Number(task.calendar_id));
-      if (!hasPermission) return false;
+    // Define a janela de tempo para expandir os eventos recorrentes (ex: 2 meses para trás, 6 para frente)
+    const rangeStart = subMonths(startOfMonth(currentDate), 2);
+    const rangeEnd = addMonths(endOfMonth(currentDate), 6);
 
-      const calendarOfTask = calendars.find(c => Number(c.id) === Number(task.calendar_id));
-      const isVisible = calendarOfTask?.visible ?? false;
+    allTasks.forEach(task => {
+        if (!visibleCalendarIds.has(Number(task.calendar_id))) {
+            return;
+        }
 
-      return isVisible;
+        if (task.recurring_rule) {
+            try {
+                const rule = RRule.fromString(`DTSTART:${new Date(task.date).toISOString().replace(/[-:.]/g, '')}\n${task.recurring_rule}`);
+                
+                rule.between(rangeStart, rangeEnd).forEach((occurrenceDate, i) => {
+                    const duration = task.endDate ? new Date(task.endDate).getTime() - new Date(task.date).getTime() : 0;
+                    
+                    expandedTasks.push({
+                        ...task,
+                        id: `${task.id}-recur-${i}`, // Cria um ID único para a ocorrência
+                        date: occurrenceDate,
+                        endDate: task.endDate ? new Date(occurrenceDate.getTime() + duration) : undefined,
+                    });
+                });
+
+            } catch (e) {
+                console.error("Erro ao processar regra de recorrência:", e);
+                expandedTasks.push(task); // Adiciona o evento original se a regra falhar
+            }
+        } else {
+            expandedTasks.push(task);
+        }
     });
-  }, [allTasks, calendars]);
+
+    return expandedTasks;
+  }, [allTasks, calendars, currentDate]);
 
 
   useEffect(() => {
@@ -155,7 +182,7 @@ const CalendarScreen: React.FC = () => {
 
   const taskFilterOptions = useMemo((): FilterOption[] => [
     { key: 'title', label: 'Título da Tarefa', type: 'text', operator: 'ct' },
-    { key: 'status', label: 'Status', type: 'select', operator: 'eq', 
+    { key: 'status', label: 'Status', type: 'select', operator: 'eq',
       options: [
         { value: 'confirmed', label: 'Confirmado' },
         { value: 'tentative', label: 'Pendente' },
