@@ -3,7 +3,7 @@ import store from '../store';
 import * as actions from '../store/modules/authReducer/actions';
 
 const api = axios.create({
-    baseURL: "https://cloud.risetec.com.br:11100/crud"
+    baseURL: "http://localhost:9000/crud"
 });
 
 // Interceptor de respostas

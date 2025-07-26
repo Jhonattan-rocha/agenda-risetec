@@ -18,6 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission';
 import FilterModal, { type FilterOption } from '../FilterModal';
 import { RRule } from 'rrule';
+import RecurrenceEditChoiceModal, { type RecurrenceEditChoice } from '../RecurrenceEditChoiceModal';
 
 const HEADER_HEIGHT = '45px';
 
@@ -85,6 +86,11 @@ const CalendarScreen: React.FC = () => {
 
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   const [taskToEdit, setTaskToEdit] = useState<Task | null>(null);
+
+  const [isRecurrenceChoiceModalOpen, setIsRecurrenceChoiceModalOpen] = useState(false);
+  const [recurrenceAction, setRecurrenceAction] = useState<'edit' | 'delete'>('edit');
+  const [editMode, setEditMode] = useState<RecurrenceEditChoice>('all');
+
   const [initialDateForNewTask, setInitialDateForNewTask] = useState<Date | undefined>(undefined);
   const [isCalendarModalOpen, setIsCalendarModalOpen] = useState(false);
   const [calendarToEdit, setCalendarToEdit] = useState<Calendar | null>(null);
@@ -237,25 +243,54 @@ const CalendarScreen: React.FC = () => {
     setCurrentDate(date);
   }, []);
 
-    const handleOpenCreateTaskModal = useCallback((date: Date) => {
-        handleDateClick(date);
-        setInitialDateForNewTask(date);
-        setTaskToEdit(null);
-        setIsTaskModalOpen(true);
-    }, [handleDateClick]);
+  const handleOpenCreateTaskModal = useCallback((date: Date) => {
+      handleDateClick(date);
+      setInitialDateForNewTask(date);
+      setTaskToEdit(null);
+      setIsTaskModalOpen(true);
+  }, [handleDateClick]);
 
-    const handleOpenEditTaskModal = useCallback((task: Task) => {
-        setTaskToEdit(task);
-        setInitialDateForNewTask(undefined);
-        setIsTaskModalOpen(true);
-    }, []);
+  const handleOpenEditTaskModal = useCallback((task: Task) => {
+      // Se a tarefa é uma ocorrência de um evento recorrente, abre o modal de escolha primeiro
+      if (task.originalId && task.id !== task.originalId) {
+          setTaskToEdit(task);
+          setRecurrenceAction('edit');
+          setIsRecurrenceChoiceModalOpen(true);
+      } else {
+          // Se for um evento normal ou o evento original, abre o modal de edição diretamente
+          setEditMode('all'); // Eventos não recorrentes sempre afetam "todos" (ou seja, apenas eles mesmos)
+          setTaskToEdit(task);
+          setInitialDateForNewTask(undefined);
+          setIsTaskModalOpen(true);
+      }
+  }, []);
 
-    const handleCloseTaskModal = useCallback(() => {
-        setIsTaskModalOpen(false);
-        setTaskToEdit(null);
-        setInitialDateForNewTask(undefined);
-        fetchAllTaskas();
-    }, [fetchAllTaskas]);
+  const handleCloseTaskModal = useCallback(() => {
+      setIsTaskModalOpen(false);
+      setTaskToEdit(null);
+      setInitialDateForNewTask(undefined);
+      fetchAllTaskas();
+  }, [fetchAllTaskas]);
+
+  const handleRecurrenceChoice = (choice: RecurrenceEditChoice) => {
+      setEditMode(choice);
+      setIsRecurrenceChoiceModalOpen(false);
+      
+      if (recurrenceAction === 'edit') {
+          // Abre o modal de tarefa para edição
+          setInitialDateForNewTask(undefined);
+          setIsTaskModalOpen(true);
+      } else if (recurrenceAction === 'delete') {
+          // Dispara a lógica de exclusão diretamente (será implementada no próximo passo)
+          if (taskToEdit) {
+              // A lógica de exclusão agora precisa ser movida para cá
+              // e usar 'choice' para a chamada de API.
+              // Por enquanto, vamos apenas logar a ação.
+              console.log(`Deletar evento ID: ${taskToEdit.originalId}, escolha: ${choice}`);
+              // A implementação da API de deleção virá no próximo passo.
+          }
+      }
+  };
 
   const renderCalendarView = useMemo(() => {
     let days: DayInfo[] = [];
@@ -341,8 +376,18 @@ const CalendarScreen: React.FC = () => {
           onClose={handleCloseTaskModal}
           task={taskToEdit}
           initialDate={initialDateForNewTask}
+          editMode={editMode}
         />
       ) : null }
+
+      {/* NOVO: Renderiza o modal de escolha de recorrência */}
+      <RecurrenceEditChoiceModal
+          isOpen={isRecurrenceChoiceModalOpen}
+          onClose={() => setIsRecurrenceChoiceModalOpen(false)}
+          onConfirm={handleRecurrenceChoice}
+          action={recurrenceAction} // Informa ao modal se é uma edição ou exclusão
+      />
+
       { isCalendarModalOpen ? (
         <CalendarModal
           isOpen={isCalendarModalOpen}

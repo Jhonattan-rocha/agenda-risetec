@@ -135,89 +135,96 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
         onClose();
     };
 
+    // NOVO: Função para limpar/resetar o formulário
+    const handleClear = () => {
+        onSave(''); // Salva uma string vazia, que significa "Nunca"
+        onClose();
+    };
+
     if (!isOpen) return null;
 
-  return (
-    <ModalOverlay $isOpen={isOpen} onClick={onClose}>
-        <ModalContent $isOpen={isOpen} onClick={e => e.stopPropagation()}>
-            <ModalHeader>
-                <h2>Configurações de repetição</h2>
-                <button onClick={onClose}>&times;</button>
-            </ModalHeader>
-            <ModalBody>
-                <FormGroup>
-                    <Label>Tipo:</Label>
-                    <Select value={freq} onChange={e => setFreq(Number(e.target.value))}>
-                        <option value={RRule.DAILY}>Diário</option>
-                        <option value={RRule.WEEKLY}>Semanal</option>
-                        <option value={RRule.MONTHLY}>Mensal</option>
-                        <option value={RRule.YEARLY}>Anual</option>
-                    </Select>
-                </FormGroup>
-
-                <FormGroup>
-                    <Label>Intervalo:</Label>
-                    <Row>
-                        <Input type="number" min="1" value={interval} onChange={e => setInterval(Number(e.target.value))} />
-                        <span>
-                            {freq === RRule.DAILY && 'dias'}
-                            {freq === RRule.WEEKLY && 'semanas'}
-                            {freq === RRule.MONTHLY && 'meses'}
-                            {freq === RRule.YEARLY && 'anos'}
-                        </span>
-                    </Row>
-                </FormGroup>
-
-                {freq === RRule.WEEKLY && (
+    return (
+        <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+            <ModalContent $isOpen={isOpen} onClick={e => e.stopPropagation()}>
+                <ModalHeader>
+                    <h2>Configurações de repetição</h2>
+                    <button onClick={onClose}>&times;</button>
+                </ModalHeader>
+                <ModalBody>
                     <FormGroup>
-                        <Label>Dias:</Label>
+                        <Label>Tipo:</Label>
+                        <Select value={freq} onChange={e => setFreq(Number(e.target.value))}>
+                            <option value={RRule.DAILY}>Diário</option>
+                            <option value={RRule.WEEKLY}>Semanal</option>
+                            <option value={RRule.MONTHLY}>Mensal</option>
+                            <option value={RRule.YEARLY}>Anual</option>
+                        </Select>
+                    </FormGroup>
+
+                    <FormGroup>
+                        <Label>Intervalo:</Label>
                         <Row>
-                            {weekdayMap.map((day, index) => (
-                                <WeekdayButton 
-                                    key={index}
-                                    $isSelected={weekdays.some(d => d.weekday === day.weekday)}
-                                    onClick={() => handleWeekdayToggle(day)}
-                                >
-                                    {weekdayLabels[index]}
-                                </WeekdayButton>
-                            ))}
+                            <Input type="number" min="1" value={interval} onChange={e => setInterval(Number(e.target.value))} />
+                            <span>
+                                {freq === RRule.DAILY && 'dias'}
+                                {freq === RRule.WEEKLY && 'semanas'}
+                                {freq === RRule.MONTHLY && 'meses'}
+                                {freq === RRule.YEARLY && 'anos'}
+                            </span>
                         </Row>
                     </FormGroup>
-                )}
 
-                <FormGroup>
-                    <Label>Termina em:</Label>
-                    <div>
-                        <Row>
-                            <input type="radio" id="never" name="termination" checked={terminationType === 'never'} onChange={() => handleTerminationChange('never')} />
-                            <label htmlFor="never">Nunca</label>
-                        </Row>
-                        <Row>
-                            <input type="radio" id="after" name="termination" checked={terminationType === 'after'} onChange={() => handleTerminationChange('after')} />
-                            <label htmlFor="after">Depois de</label>
-                            <Input type="number" min="1" disabled={terminationType !== 'after'} value={count || ''} onChange={e => setCount(Number(e.target.value))} />
-                            <span>ocorrências</span>
-                        </Row>
-                         <Row>
-                            <input type="radio" id="on" name="termination" checked={terminationType === 'on'} onChange={() => handleTerminationChange('on')} />
-                            <label htmlFor="on">Em</label>
-                            <Input type="date" disabled={terminationType !== 'on'} value={until ? format(until, 'yyyy-MM-dd') : ''} onChange={e => setUntil(e.target.value ? parseISO(e.target.value) : null)} />
-                        </Row>
-                    </div>
-                </FormGroup>
-                <FormGroup>
-                    <Label>Resumo:</Label>
-                    <Summary>{ruleSummary}</Summary>
-                </FormGroup>
+                    {freq === RRule.WEEKLY && (
+                        <FormGroup>
+                            <Label>Dias:</Label>
+                            <Row>
+                                {weekdayMap.map((day, index) => (
+                                    <WeekdayButton 
+                                        key={index}
+                                        $isSelected={weekdays.some(d => d.weekday === day.weekday)}
+                                        onClick={() => handleWeekdayToggle(day)}
+                                    >
+                                        {weekdayLabels[index]}
+                                    </WeekdayButton>
+                                ))}
+                            </Row>
+                        </FormGroup>
+                    )}
 
-            </ModalBody>
-            <ModalFooter>
-                <Button outline onClick={onClose}>Cancelar</Button>
-                <Button primary onClick={handleSave}>Salvar</Button>
-            </ModalFooter>
-        </ModalContent>
-    </ModalOverlay>
-  );
+                    <FormGroup>
+                        <Label>Termina em:</Label>
+                        <div>
+                            <Row>
+                                <input type="radio" id="never" name="termination" checked={terminationType === 'never'} onChange={() => handleTerminationChange('never')} />
+                                <label htmlFor="never">Nunca</label>
+                            </Row>
+                            <Row>
+                                <input type="radio" id="after" name="termination" checked={terminationType === 'after'} onChange={() => handleTerminationChange('after')} />
+                                <label htmlFor="after">Depois de</label>
+                                <Input type="number" min="1" disabled={terminationType !== 'after'} value={count || ''} onChange={e => setCount(Number(e.target.value))} />
+                                <span>ocorrências</span>
+                            </Row>
+                            <Row>
+                                <input type="radio" id="on" name="termination" checked={terminationType === 'on'} onChange={() => handleTerminationChange('on')} />
+                                <label htmlFor="on">Em</label>
+                                <Input type="date" disabled={terminationType !== 'on'} value={until ? format(until, 'yyyy-MM-dd') : ''} onChange={e => setUntil(e.target.value ? parseISO(e.target.value) : null)} />
+                            </Row>
+                        </div>
+                    </FormGroup>
+                    <FormGroup>
+                        <Label>Resumo:</Label>
+                        <Summary>{ruleSummary}</Summary>
+                    </FormGroup>
+
+                </ModalBody>
+                <ModalFooter>
+                    <Button outline danger onClick={handleClear}>Limpar</Button>
+                    <Button outline onClick={onClose}>Cancelar</Button>
+                    <Button primary onClick={handleSave}>Salvar</Button>
+                </ModalFooter>
+            </ModalContent>
+        </ModalOverlay>
+    );
 };
 
 export default RecurrenceModal;
