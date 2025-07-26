@@ -1,9 +1,10 @@
 // src/components/Calendar/MonthView.tsx
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { format, isSameDay } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
 import { Card } from '../Common';
+import EventTooltip from './EventTooltip';
 
 interface MonthViewProps {
   days: DayInfo[];
@@ -160,64 +161,80 @@ const Avatar = styled.img`
 
 const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
+  
+  const handleMouseEnter = (task: Task, event: React.MouseEvent) => {
+    setHoveredTask(task);
+    setTooltipPosition({ top: event.clientY + 10, left: event.clientX + 10 });
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredTask(null);
+  };
 
   return (
-    <MonthGrid>
-      <div className="weekdays-header">
-        {dayNames.map(dayName => (
-          <span key={dayName}>{dayName}</span>
-        ))}
-      </div>
-      {days.map((dayInfo, index) => {
-        const dayTasks = dayInfo.tasks;
-        const displayedTasks = dayTasks.slice(0, 2);
-        const remainingTasksCount = dayTasks.length - displayedTasks.length;
-        
-        return (
-          <DayCell
-            key={index}
-            $isCurrentMonth={dayInfo.isCurrentMonth}
-            $isToday={dayInfo.isToday}
-            $hasTasks={dayTasks.length > 0}
-            onClick={() => onDayClick(dayInfo.date)}
-          >
-            <div className="day-number">
-              <span>{format(dayInfo.date, 'd')}</span>
-            </div>
-            <div className="tasks-list">
-              {displayedTasks.map(task => {
-                const isContinuation = !isSameDay(new Date(task.date), dayInfo.date);
-                return (
-                    <TaskItem
-                        key={task.id}
-                        $color={String(task.color)}
-                        $isContinuation={isContinuation}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onTaskClick(task);
-                        }}
-                    >
-                    <TaskTitle>
-                        {task.isAllDay || isContinuation ? task.title : `${task.startTime} ${task.title}`}
-                    </TaskTitle>
-                    <AvatarStack>
-                        {task.users?.slice(0, 2).map(user => (
-                        <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
-                        ))}
-                    </AvatarStack>
-                    </TaskItem>
-                );
-              })}
-              {remainingTasksCount > 0 && (
-                <div className="more-tasks">
-                  +{remainingTasksCount} mais
-                </div>
-              )}
-            </div>
-          </DayCell>
-        );
-      })}
-    </MonthGrid>
+    <>
+      <MonthGrid>
+        <div className="weekdays-header">
+          {dayNames.map(dayName => (
+            <span key={dayName}>{dayName}</span>
+          ))}
+        </div>
+        {days.map((dayInfo, index) => {
+          const dayTasks = dayInfo.tasks;
+          const displayedTasks = dayTasks.slice(0, 2);
+          const remainingTasksCount = dayTasks.length - displayedTasks.length;
+          
+          return (
+            <DayCell
+              key={index}
+              $isCurrentMonth={dayInfo.isCurrentMonth}
+              $isToday={dayInfo.isToday}
+              $hasTasks={dayTasks.length > 0}
+              onClick={() => onDayClick(dayInfo.date)}
+            >
+              <div className="day-number">
+                <span>{format(dayInfo.date, 'd')}</span>
+              </div>
+              <div className="tasks-list">
+                {displayedTasks.map(task => {
+                  const isContinuation = !isSameDay(new Date(task.date), dayInfo.date);
+                  return (
+                      <TaskItem
+                          key={task.id}
+                          $color={String(task.color)}
+                          $isContinuation={isContinuation}
+                          onClick={(e) => {
+                              e.stopPropagation();
+                              onTaskClick(task);
+                          }}
+                          onMouseEnter={(e) => handleMouseEnter(task, e)}
+                          onMouseLeave={handleMouseLeave}
+                      >
+                      <TaskTitle>
+                          {task.isAllDay || isContinuation ? task.title : `${task.startTime} ${task.title}`}
+                      </TaskTitle>
+                      <AvatarStack>
+                          {task.users?.slice(0, 2).map(user => (
+                          <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
+                          ))}
+                      </AvatarStack>
+                      </TaskItem>
+                  );
+                })}
+                {remainingTasksCount > 0 && (
+                  <div className="more-tasks">
+                    +{remainingTasksCount} mais
+                  </div>
+                )}
+              </div>
+            </DayCell>
+          );
+        })}
+      </MonthGrid>
+      {hoveredTask && <EventTooltip task={hoveredTask} position={tooltipPosition} />}
+    </>
   );
 };
 

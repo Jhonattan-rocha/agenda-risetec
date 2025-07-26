@@ -158,7 +158,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     // A lógica de deleção para eventos recorrentes agora é tratada no CalendarScreen
     // Este handleDelete é apenas para eventos não-recorrentes.
     const eventIdToDelete = currentTask.originalId || currentTask.id;
-    if (eventIdToDelete && !currentTask.recurring_rule && window.confirm('Tem certeza que deseja excluir este evento?')) {
+    if (eventIdToDelete && window.confirm('Tem certeza que deseja excluir este evento?')) {
       setIsLoading(true);
       api.delete(`/event/${eventIdToDelete}`, { headers: { Authorization: `Bearer ${user.token}` }})
       .then(() => {
