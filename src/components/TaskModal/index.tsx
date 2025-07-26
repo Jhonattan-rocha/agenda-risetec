@@ -15,6 +15,7 @@ import { usePermission } from '../../hooks/usePermission';
 import RecurrenceModal from '../RecurrenceModal';
 import { rrulestr } from 'rrule';
 import type { RecurrenceEditChoice } from '../RecurrenceEditChoiceModal'; // Importar o tipo
+import { getText } from '../../utils/dateUtils';
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -198,7 +199,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const getRecurrenceSummary = (rruleString?: string): string => {
     if (!rruleString) return 'Nunca';
     try {
-        return rrulestr(rruleString).toText();
+        return rrulestr(rruleString).toText().split(" ").map((text) => getText(text.replace(/[.,!?;:'"()\[\]{}\-]/g, ''))).join(" ");
     } catch (e) {
         return 'Personalizado';
     }

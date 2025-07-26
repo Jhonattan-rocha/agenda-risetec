@@ -17,7 +17,7 @@ import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
 import { usePermission } from '../../hooks/usePermission';
 import FilterModal, { type FilterOption } from '../FilterModal';
-import { RRule } from 'rrule';
+import { RRule, rrulestr } from 'rrule';
 import RecurrenceEditChoiceModal, { type RecurrenceEditChoice } from '../RecurrenceEditChoiceModal';
 
 const HEADER_HEIGHT = '45px';
@@ -149,9 +149,11 @@ const CalendarScreen: React.FC = () => {
 
           if (task.recurring_rule) {
               try {
-                  const options = RRule.parseString(task.recurring_rule);
-                  options.dtstart = new Date(task.date);
-                  const rule = new RRule(options);
+                  // const options = RRule.parseString(task.recurring_rule);
+                  // options.dtstart = new Date(task.date);
+                  // const rule = new RRule(options);
+                  const ruleString = `DTSTART:${new Date(task.date).toISOString().replace(/[-:.]/g, '').slice(0, 15)}Z\n${task.recurring_rule}`;
+                  const rule = rrulestr(ruleString);
 
                   rule.between(rangeStart, rangeEnd).forEach((occurrenceDate, i) => {
                       const duration = task.endDate ? new Date(task.endDate).getTime() - new Date(task.date).getTime() : 0;
@@ -159,9 +161,10 @@ const CalendarScreen: React.FC = () => {
                       expandedTasks.push({
                           ...task,
                           id: `${task.id}-recur-${i}`,
-                          originalId: task.id, // <-- ADICIONADO AQUI
+                          originalId: task.id,
                           date: occurrenceDate,
-                          endDate: task.endDate ? new Date(occurrenceDate.getTime() + duration) : undefined,
+                          endDate: task.endDate ? new Date(occurrenceDate.getTime() + duration) : occurrenceDate,
+                          users: task.users || [], 
                       });
                   });
               } catch (e) {

@@ -22,7 +22,7 @@ const TooltipContainer = styled.div<{ top: number; left: number }>`
   padding: ${({ theme }) => theme.spacing.md};
   z-index: 1002;
   width: 300px;
-  max-height: 400px;
+  max-height: 300px;
   pointer-events: none; // Impede que o tooltip interfira com outros eventos do mouse
 `;
 

@@ -121,4 +121,64 @@ export const getDaysInMonth = (date: Date): DayInfo[] => {
     return days;
 };
 
-export { addMonths, subMonths, isSameDay, format, getDay, startOfWeek, ptBR };
+// Objeto com as traduções para pt-BR
+const ptBrTranslations = {
+    'every': 'a cada',
+    'day': 'dia',
+    'days': 'dias',
+    'week': 'semana',
+    'weeks': 'semanas',
+    'month': 'mês',
+    'months': 'meses',
+    'year': 'ano',
+    'years': 'anos',
+    'on': 'em',
+    'in': 'em',
+    'on the': 'no',
+    'and': 'e',
+    'or': 'ou',
+    'the': 'o',
+    'st': 'º',
+    'nd': 'º',
+    'rd': 'º',
+    'th': 'º',
+    // Dias da semana
+    'Sunday': 'Domingo',
+    'Monday': 'Segunda-feira',
+    'Tuesday': 'Terça-feira',
+    'Wednesday': 'Quarta-feira',
+    'Thursday': 'Quinta-feira',
+    'Friday': 'Sexta-feira',
+    'Saturday': 'Sábado',
+    '0': 'Domingo',
+    '1': 'Segunda-feira',
+    '2': 'Terça-feira',
+    '3': 'Quarta-feira',
+    '4': 'Quinta-feira',
+    '5': 'Sexta-feira',
+    '6': 'Sábado',
+    // Meses
+    'January': 'Janeiro',
+    'February': 'Fevereiro',
+    'March': 'Março',
+    'April': 'Abril',
+    'May': 'Maio',
+    'June': 'Junho',
+    'July': 'Julho',
+    'August': 'Agosto',
+    'September': 'Setembro',
+    'October': 'Outubro',
+    'November': 'Novembro',
+    'December': 'Dezembro',
+    // Para a frase "until..."
+    ', until %s': ', até %s',
+    // Para a frase "for..."
+    ', %d times': ', %d vezes',
+};
+
+// Função que a biblioteca rrule usará para obter as traduções
+const getText = (str: string): string => {
+    return (ptBrTranslations as any)[str] || str;
+}
+
+export { addMonths, subMonths, isSameDay, format, getDay, startOfWeek, ptBR, getText };

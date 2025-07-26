@@ -7,7 +7,7 @@ import {
     ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter,
     FormGroup, Label, Row, Select, Input, WeekdayButton, Summary
 } from './styled';
-import { toText } from 'rrule/dist/esm/nlp';
+import { getText } from '../../utils/dateUtils';
 
 interface RecurrenceModalProps {
   isOpen: boolean;
@@ -33,7 +33,14 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
             // CORREÇÃO 1: Lógica para carregar o estado de edição de uma regra existente
             if (initialRRule) {
                 try {
-                    const ruleOptions = rrulestr(initialRRule).origOptions;
+                    const ruleOrSet = rrulestr(initialRRule);
+                    
+                    // Verificamos se é um RRuleSet e pegamos as opções da primeira RRULE,
+                    // caso contrário, pegamos as opções do RRule simples.
+                    const ruleOptions = (ruleOrSet as any)._rrule 
+                        ? (ruleOrSet as any)._rrule[0].origOptions 
+                        : (ruleOrSet as RRule).origOptions;
+
                     setFreq(ruleOptions.freq as Frequency);
                     setInterval(ruleOptions.interval || 1);
 
@@ -111,7 +118,8 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
                 until,
                 count,
             });
-            return toText(rule);
+            const result = rule.toText().split(" ").map(text => getText(text.replace(/[.,!?;:'"()\[\]{}\-]/g, ''))).join(" ");
+            return result
         } catch {
             return "Regra de repetição inválida.";
         }
