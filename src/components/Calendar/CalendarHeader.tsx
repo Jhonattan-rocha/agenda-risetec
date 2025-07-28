@@ -5,6 +5,7 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Button } from '../Common';
 import { FaFilter } from 'react-icons/fa';
+import NotificationBell from '../NotificationBell';
 
 interface CalendarHeaderProps {
   currentDate: Date;
@@ -122,6 +123,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, on
           <FaFilter />
       </FilterButton>
       <TodayButton primary onClick={onToday}>Hoje</TodayButton>
+      <NotificationBell />
     </HeaderContainer>
   );
 };
