@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux';
 import api from '../../services/axios';
 import ActivityIndicator from '../ActivityIndicator';
 import { usePermission } from '../../hooks/usePermission';
+import { convertToMinutes, convertFromMinutes, type TimeUnit } from '../../utils/timeConverter'; // NOVO
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -164,6 +165,15 @@ const ModalFooter = styled.div<{ $isEditing: boolean }>`
   margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
+const FormRow = styled.div`
+  display: flex;
+  gap: ${({ theme }) => theme.spacing.md};
+  
+  & > * {
+    flex: 1;
+  }
+`;
+
 const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar }) => {
   const [currentCalendar, setCurrentCalendar] = useState<Partial<Calendar>>({
     name: '',
@@ -181,6 +191,8 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   const canDeleteCalendar = usePermission('delete', `calendar_${calendar?.id}`, user.user.profile as Profile);
   const canCreateCalendar = usePermission('create', 'calendars', user.user.profile as Profile);
   const canSave = isEditing ? canUpdateCalendar : canCreateCalendar;
+  const [timeValue, setTimeValue] = useState<number>(30);
+  const [timeUnit, setTimeUnit] = useState<TimeUnit>('minutes');
 
   // NOVO: Verifica se a cor atual é uma das predefinidas
   const isCustomColor = !predefinedColors.includes(currentCalendar.color || '');
@@ -188,22 +200,24 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   useEffect(() => {
     if (calendar) {
       setCurrentCalendar(calendar);
+      // Converte os minutos do backend para um formato amigável para a UI
+      const [value, unit] = convertFromMinutes(calendar.notification_time_before);
+      setTimeValue(value);
+      setTimeUnit(unit);
     } else {
+      // Estado inicial para um novo calendário
       setCurrentCalendar({
         name: '',
         color: predefinedColors[0],
         visible: true,
+        notification_type: 'email',
+        notification_repeats: 1,
+        notification_message: 'Lembrete: {event_title} às {event_time}.'
       });
+      setTimeValue(30);
+      setTimeUnit('minutes');
     }
-  }, [calendar]);
-
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   const { name, value, type, checked } = e.target;
-  //   setCurrentCalendar(prev => ({
-  //     ...prev,
-  //     [name]: type === 'checkbox' ? checked : value,
-  //   }));
-  // };
+  }, [calendar, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -216,14 +230,15 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
       alert('O nome do calendário é obrigatório.');
       return;
     }
+    const totalMinutes = convertToMinutes(timeValue, timeUnit);
     
     setIsLoading(true);
 
     const req = isEditing 
-      ? api.put(`/calendar/${calendar?.id}`, currentCalendar, {
+      ? api.put(`/calendar/${calendar?.id}`, {...currentCalendar, notification_time_before: totalMinutes}, {
           headers: { Authorization: `Bearer ${user.token}` }
         })
-      : api.post("/calendar", currentCalendar, {
+      : api.post("/calendar", {...currentCalendar, notification_time_before: totalMinutes}, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
     
@@ -318,15 +333,29 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
                 <option value="both">E-mail e WhatsApp</option>
               </Select>
             </FormGroup>
-            <FormGroup>
-              <Label>Avisar com antecedência (minutos)</Label>
-              <Input
-                type="number"
-                name="notification_time_before"
-                value={currentCalendar.notification_time_before || 30}
-                onChange={handleChange}
-              />
-            </FormGroup>
+            <FormRow>
+              <FormGroup style={{ flex: 1 }}>
+                <Label>Avisar com antecedência</Label>
+                <Input
+                    type="number"
+                    value={timeValue}
+                    onChange={(e) => setTimeValue(Number(e.target.value))}
+                    min="1"
+                />
+              </FormGroup>
+              <FormGroup style={{ flex: 2 }}>
+                <Label>&nbsp;</Label>
+                <Select
+                    value={timeUnit}
+                    onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
+                >
+                    <option value="minutes">Minutos</option>
+                    <option value="hours">Horas</option>
+                    <option value="days">Dias</option>
+                    <option value="weeks">Semanas</option>
+                </Select>
+              </FormGroup>
+            </FormRow>
             <FormGroup>
                 <Label>Repetir aviso (vezes)</Label>
                 <Input

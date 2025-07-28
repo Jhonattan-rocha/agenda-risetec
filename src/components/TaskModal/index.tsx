@@ -17,6 +17,7 @@ import RecurrenceModal from '../RecurrenceModal';
 import { rrulestr } from 'rrule';
 import type { RecurrenceEditChoice } from '../RecurrenceEditChoiceModal'; // Importar o tipo
 import { getText } from '../../utils/dateUtils';
+import { convertToMinutes, convertFromMinutes, type TimeUnit } from '../../utils/timeConverter'; // NOVO
 
 interface TaskModalProps {
   isOpen: boolean;
@@ -83,10 +84,21 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   
   const canSave = isEditing ? canUpdateTask : canCreateTask;
   const isCustomColor = !predefinedColors.includes(currentTask.color || '');
+  const [timeValue, setTimeValue] = useState<string>('');
+  const [timeUnit, setTimeUnit] = useState<TimeUnit | ''>('');
 
   useEffect(() => {
     // Popula o estado do formulário quando o modal abre
-    const taskToLoad = task || {};
+    const taskToLoad: Task = task as Task;
+    if (taskToLoad?.notification_time_before != null) {
+        const [value, unit] = convertFromMinutes(taskToLoad.notification_time_before);
+        setTimeValue(String(value));
+        setTimeUnit(unit);
+    } else {
+        // Reseta se a tarefa não tiver um valor específico (para herdar)
+        setTimeValue('');
+        setTimeUnit('');
+    }
     setCurrentTask({
       ...taskToLoad,
       date: task ? (task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString())) : (initialDate || new Date()),
@@ -128,6 +140,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       return;
     }
     setIsLoading(true);
+    const totalMinutes = timeValue && timeUnit ? convertToMinutes(Number(timeValue), timeUnit) : null;
 
     const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
     
@@ -135,6 +148,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     const taskPayload = {
       ...currentTask,
       user_ids,
+      notification_time_before: totalMinutes,
       calendar_id: parseInt(String(currentTask.calendar_id), 10),
       // Adiciona os campos para edição de recorrência
       edit_mode: editMode,
@@ -312,16 +326,31 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
               </Select>
             </FormGroup>
             
-            <FormGroup>
-              <Label>Avisar com antecedência (minutos)</Label>
-              <Input
-                type="number"
-                name="notification_time_before"
-                value={currentTask.notification_time_before || ''}
-                placeholder="Padrão do Calendário"
-                onChange={handleChange}
-              />
-            </FormGroup>
+            <FormRow>
+              <FormGroup style={{ flex: 1 }}>
+                <Label>Avisar com antecedência</Label>
+                <Input
+                  type="number"
+                  value={timeValue}
+                  placeholder="Padrão"
+                  onChange={(e) => setTimeValue(e.target.value)}
+                  min="1"
+                />
+              </FormGroup>
+              <FormGroup style={{ flex: 2 }}>
+                <Label>&nbsp;</Label>
+                <Select
+                  value={timeUnit}
+                  onChange={(e) => setTimeUnit(e.target.value as TimeUnit | '')}
+                >
+                  <option value="">Padrão do Calendário</option>
+                  <option value="minutes">Minutos</option>
+                  <option value="hours">Horas</option>
+                  <option value="days">Dias</option>
+                  <option value="weeks">Semanas</option>
+                </Select>
+              </FormGroup>
+            </FormRow>
 
             <FormGroup>
                 <Label>Repetir aviso (vezes)</Label>
