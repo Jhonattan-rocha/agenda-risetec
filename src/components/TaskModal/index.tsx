@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape */
 // src/components/TaskModal/index.tsx
 import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from '../Common';
@@ -91,6 +92,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
       date: task ? (task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString())) : (initialDate || new Date()),
       endDate: task?.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : undefined,
       recurring_rule: task?.recurring_rule || '',
+      color: task ? task.color : undefined, 
     });
   }, [task, initialDate, isOpen]); // Roda sempre que o modal abrir
 
@@ -196,13 +198,48 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     }
   }, [isOpen, fetchAllData]);
 
+  // --- NOVO useEffect PARA SINCRONIZAR A COR ---
+  useEffect(() => {
+    // Só executa se houver um ID de calendário e a lista de calendários estiver carregada
+    if (currentTask.calendar_id && calendars.length > 0) {
+      const selectedCalendar = calendars.find(c => String(c.id) === String(currentTask.calendar_id));
+      if (selectedCalendar) {
+        // Atualiza a cor no estado da tarefa, mas SÓ SE a cor atual não tiver sido
+        // modificada manualmente pelo usuário (ou se for uma nova tarefa sem cor)
+        setCurrentTask(prev => ({
+          ...prev,
+          color: prev.color || selectedCalendar.color
+        }));
+      }
+    }
+  }, [currentTask.calendar_id, calendars]);
+
   const getRecurrenceSummary = (rruleString?: string): string => {
     if (!rruleString) return 'Nunca';
     try {
         return rrulestr(rruleString).toText().split(" ").map((text) => getText(text.replace(/[.,!?;:'"()\[\]{}\-]/g, ''))).join(" ");
-    } catch (e) {
+    } catch {
         return 'Personalizado';
     }
+  };
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      
+      // Lógica especial para quando o calendário muda
+      if (name === 'calendar_id') {
+          const selectedCalendar = calendars.find(c => String(c.id) === value);
+          if (selectedCalendar) {
+              // Atualiza o ID do calendário E a cor da tarefa ao mesmo tempo
+              setCurrentTask(prev => ({ 
+                  ...prev, 
+                  calendar_id: value,
+                  color: selectedCalendar.color // Define a cor do calendário como a nova cor da tarefa
+              }));
+          }
+      } else {
+          setCurrentTask(prev => ({ ...prev, [name]: value }));
+      }
   };
 
   if (!isOpen) return null;
@@ -260,6 +297,52 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
                 </RecurrenceButton>
               </FormGroup>
             </FormRow>
+            <FormGroup>
+              <Label>Notificações</Label>
+              <Select
+                name="notification_type"
+                value={currentTask.notification_type || ''}
+                onChange={handleChange}
+              >
+                <option value="">Padrão do Calendário</option>
+                <option value="none">Nenhuma</option>
+                <option value="email">Apenas E-mail</option>
+                <option value="whatsapp">Apenas WhatsApp</option>
+                <option value="both">E-mail e WhatsApp</option>
+              </Select>
+            </FormGroup>
+            
+            <FormGroup>
+              <Label>Avisar com antecedência (minutos)</Label>
+              <Input
+                type="number"
+                name="notification_time_before"
+                value={currentTask.notification_time_before || ''}
+                placeholder="Padrão do Calendário"
+                onChange={handleChange}
+              />
+            </FormGroup>
+
+            <FormGroup>
+                <Label>Repetir aviso (vezes)</Label>
+                <Input
+                    type="number"
+                    name="notification_repeats"
+                    value={currentTask.notification_repeats || ''}
+                    placeholder="Padrão do Calendário"
+                    onChange={handleChange}
+                />
+            </FormGroup>
+
+            <FormGroup>
+              <Label>Mensagem do Lembrete</Label>
+              <TextArea
+                name="notification_message"
+                value={currentTask.notification_message || ''}
+                placeholder="Padrão do Calendário"
+                onChange={handleChange}
+              />
+            </FormGroup>
 
             <CheckboxGroup>
               <Input id="isAllDay" name="isAllDay" type="checkbox" checked={currentTask.isAllDay || false} onChange={handleChange} />
@@ -287,7 +370,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
             <FormGroup>
               <Label htmlFor="calendar_id">Calendário</Label>
-              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleChange} required >
+              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleSelectChange} required >
                 <option value="" disabled>Selecione um calendário</option>
                 {calendars.map(calendar => (
                   <option key={calendar.id} value={calendar.id}>{calendar.name}</option>

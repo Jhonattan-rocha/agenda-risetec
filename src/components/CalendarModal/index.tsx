@@ -1,7 +1,7 @@
 // src/components/CalendarModal/index.tsx
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { Button, Card } from '../Common';
+import { Button, Card, Select, TextArea } from '../Common';
 import type { Calendar, Profile } from '../../types';
 import type { AuthState } from '../../store/modules/types';
 import { useSelector } from 'react-redux';
@@ -169,6 +169,10 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
     name: '',
     color: predefinedColors[0],
     visible: true,
+    notification_type: 'email',
+    notification_time_before: 30,
+    notification_repeats: 1,
+    notification_message: 'Lembrete: {event_title} às {event_time}.'
   });
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!calendar?.id;
@@ -193,12 +197,18 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
     }
   }, [calendar]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = e.target;
-    setCurrentCalendar(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const { name, value, type, checked } = e.target;
+  //   setCurrentCalendar(prev => ({
+  //     ...prev,
+  //     [name]: type === 'checkbox' ? checked : value,
+  //   }));
+  // };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
+    setCurrentCalendar(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleSave = () => {
@@ -295,6 +305,47 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
             />
             <Label htmlFor="visible">Visível</Label>
           </CheckboxGroup>
+          <FormGroup>
+              <Label>Notificações</Label>
+              <Select
+                name="notification_type"
+                value={currentCalendar.notification_type || 'email'}
+                onChange={handleChange}
+              >
+                <option value="none">Nenhuma</option>
+                <option value="email">Apenas E-mail</option>
+                <option value="whatsapp">Apenas WhatsApp</option>
+                <option value="both">E-mail e WhatsApp</option>
+              </Select>
+            </FormGroup>
+            <FormGroup>
+              <Label>Avisar com antecedência (minutos)</Label>
+              <Input
+                type="number"
+                name="notification_time_before"
+                value={currentCalendar.notification_time_before || 30}
+                onChange={handleChange}
+              />
+            </FormGroup>
+            <FormGroup>
+                <Label>Repetir aviso (vezes)</Label>
+                <Input
+                    type="number"
+                    name="notification_repeats"
+                    value={currentCalendar.notification_repeats || 1}
+                    onChange={handleChange}
+                />
+            </FormGroup>
+            <FormGroup>
+              <Label>Mensagem do Lembrete</Label>
+              <TextArea
+                name="notification_message"
+                value={currentCalendar.notification_message || ''}
+                onChange={handleChange}
+                placeholder="Use {event_title} e {event_time}"
+              />
+              <small>Placeholders: `_event_title_`, `_event_time_`</small>
+            </FormGroup>
         </ModalBody>
         <ModalFooter $isEditing={isEditing}>
           {isEditing && !isLoading && canDeleteCalendar && (

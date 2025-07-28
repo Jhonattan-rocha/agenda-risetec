@@ -11,6 +11,10 @@ export interface Calendar {
   description?: string;
   is_private?: boolean;
   owner_id?: string;
+  notification_type: string;
+  notification_time_before: number;
+  notification_repeats: number;
+  notification_message: string;
 }
 
 export interface Task {
@@ -30,6 +34,10 @@ export interface Task {
   status?: 'confirmed' | 'tentative' | 'cancelled';
   recurring_rule?: string;
   created_by?: string;
+  notification_type: string;
+  notification_time_before: number;
+  notification_repeats: number;
+  notification_message: string;
 }
 
 export interface DayInfo {

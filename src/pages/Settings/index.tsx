@@ -4,13 +4,16 @@ import styled from 'styled-components';
 import { Link, useNavigate } from 'react-router-dom';
 import ProfileSettings from '../../components/Settings/ProfileSettings';
 import AppearanceSettings from '../../components/Settings/AppearanceSettings';
-import { FaUser, FaPalette, FaUsersCog } from 'react-icons/fa'; // Ícone atualizado
+// IMPORTAR O NOVO ÍCONE E O NOVO COMPONENTE
+import { FaUser, FaPalette, FaUsersCog, FaWhatsapp } from 'react-icons/fa'; 
 import UserManagement from '../../components/Settings/UserManagement';
+import WhatsAppSettings from '../../components/Settings/WhatsAppSettings'; // NOVO
 import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
-import { usePermission } from '../../hooks/usePermission'; // Importa o hook
+import { usePermission } from '../../hooks/usePermission'; 
 import type { Profile } from '../../types';
 
+// ... (Styled Components permanecem os mesmos) ...
 const SettingsLayout = styled.div`
   display: flex;
   max-width: 1200px;
@@ -114,7 +117,9 @@ const BackLink = styled(Link)`
   color: ${({ theme }) => theme.colors.primary};
 `;
 
-type Tab = 'profiles' | 'users' | 'appearance' | 'integrations';
+
+// ADICIONAR A NOVA OPÇÃO AO TIPO DE ABA
+type Tab = 'profiles' | 'users' | 'appearance' | 'whatsapp';
 
 const SettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('appearance');
@@ -123,24 +128,31 @@ const SettingsPage: React.FC = () => {
 
   const canViewProfiles = usePermission('view', 'profiles', user.user.profile as Profile);
   const canViewUsers = usePermission('view', 'users', user.user.profile as Profile);
+  // Crie uma permissão para 'integrations' ou 'whatsapp' se quiser restringir o acesso
+  const canViewWhatsapp = usePermission('view', 'integrations', user.user.profile as Profile);
 
   useEffect(() => {
+    // Ajusta a aba inicial com base nas permissões
     if (canViewProfiles) {
       setActiveTab('profiles');
     } else if (canViewUsers) {
       setActiveTab('users');
+    } else if (canViewWhatsapp){
+      setActiveTab('whatsapp');
     } else {
       setActiveTab('appearance');
     }
-  }, [canViewProfiles, canViewUsers]);
+  }, [canViewProfiles, canViewUsers, canViewWhatsapp]);
 
 
   const renderContent = () => {
     switch (activeTab) {
       case 'profiles':   return canViewProfiles ? <ProfileSettings /> : null;
-      case 'users':        return canViewUsers ? <UserManagement /> : null;
-      case 'appearance':   return <AppearanceSettings />;
-      default:             return <AppearanceSettings />;
+      case 'users':      return canViewUsers ? <UserManagement /> : null;
+      // ADICIONAR O RENDER DO NOVO COMPONENTE
+      case 'whatsapp':   return canViewWhatsapp ? <WhatsAppSettings /> : null;
+      case 'appearance': return <AppearanceSettings />;
+      default:           return <AppearanceSettings />;
     }
   };
 
@@ -166,6 +178,12 @@ const SettingsPage: React.FC = () => {
           {canViewUsers && (
             <NavItem $isActive={activeTab === 'users'} onClick={() => setActiveTab('users')}>
               <FaUser /> <span>Usuários</span>
+            </NavItem>
+          )}
+          {/* ADICIONAR A NOVA ABA DE NAVEGAÇÃO */}
+          {canViewWhatsapp && (
+            <NavItem $isActive={activeTab === 'whatsapp'} onClick={() => setActiveTab('whatsapp')}>
+              <FaWhatsapp /> <span>WhatsApp</span>
             </NavItem>
           )}
           <NavItem $isActive={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')}>
