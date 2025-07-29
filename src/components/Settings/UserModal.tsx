@@ -109,6 +109,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
                     email: '',
                     avatarUrl: '',
                     profile_id: '',
+                    phone_number: '',
                 });
             }
         }
@@ -120,8 +121,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
     };
 
     const handleSave = async () => {
-        if (!currentUser.name || !currentUser.email || !currentUser.profile_id) {
-            alert("Nome, email e perfil são obrigatórios.");
+        if (!currentUser.name || !currentUser.email || !currentUser.profile_id || !currentUser.phone_number) {
+            alert("Nome, email, telefone e perfil são obrigatórios.");
             return;
         }
         if (!isEditing && !password) {
@@ -159,8 +160,6 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
         }
     };
 
-    console.log(currentUser)
-
     if (!isOpen) return null;
 
     return (
@@ -184,6 +183,11 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
                 <FormGroup>
                     <Label htmlFor="password">Senha</Label>
                     <Input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={isEditing ? 'Deixe em branco para não alterar' : ''} />
+                </FormGroup>
+
+                <FormGroup>
+                    <Label htmlFor="password">Telefone</Label>
+                    <Input id="phone_number" name="phone_number" type="tel" value={currentUser.phone_number || ''} onChange={handleChange} placeholder={'Ex: 11900000000'} />
                 </FormGroup>
 
                 <FormGroup>
