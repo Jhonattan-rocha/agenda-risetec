@@ -13,6 +13,7 @@ export const Button = styled.button<ButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  margin-right: 10px;
   padding: ${props => props.small ? `${props.theme.spacing.xs} ${props.theme.spacing.sm}` : `${props.theme.spacing.sm} ${props.theme.spacing.md}`};
   border-radius: ${props => props.rounded ? '50px' : props.theme.borderRadius};
   font-size: ${props => props.small ? '0.85rem' : '1rem'};

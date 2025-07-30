@@ -181,4 +181,18 @@ const getText = (str: string): string => {
     return (ptBrTranslations as any)[str] || str;
 }
 
-export { addMonths, subMonths, isSameDay, format, getDay, startOfWeek, ptBR, getText };
+// src/utils/getInitials.ts
+const getInitials = (name: string): string => {
+  if (!name) return '?';
+
+  const names = name.trim().split(' ');
+  const initials = names.map(n => n[0]).join('');
+
+  if (initials.length > 2) {
+    return initials[0] + initials[initials.length - 1];
+  }
+
+  return initials.toUpperCase();
+};
+
+export { addMonths, subMonths, isSameDay, format, getDay, startOfWeek, ptBR, getText, getInitials };

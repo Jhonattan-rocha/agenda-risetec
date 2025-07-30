@@ -5,6 +5,7 @@ import { format, isSameDay } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
 import { Card } from '../Common';
 import EventTooltip from './EventTooltip';
+import UserAvatar from './UserAvatar';
 
 interface MonthViewProps {
   days: DayInfo[];
@@ -147,18 +148,6 @@ const AvatarStack = styled.div`
   }
 `;
 
-const Avatar = styled.img`
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  border: 1px solid white;
-  margin-left: -6px;
-  
-  &:first-child {
-    margin-left: 0;
-  }
-`;
-
 const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) => {
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
@@ -217,7 +206,7 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
                       </TaskTitle>
                       <AvatarStack>
                           {task.users?.slice(0, 2).map(user => (
-                          <Avatar key={user.id} src={user.avatarUrl} alt={user.name} title={user.name} />
+                            <UserAvatar key={user.id} user={user} />
                           ))}
                       </AvatarStack>
                       </TaskItem>

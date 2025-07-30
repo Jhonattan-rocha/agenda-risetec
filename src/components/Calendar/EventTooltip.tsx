@@ -1,10 +1,13 @@
 // src/components/Calendar/EventTooltip.tsx
 
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
-import type { Task } from '../../types';
+import type { Calendar, Task } from '../../types';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import api from '../../services/axios';
+import { useSelector } from 'react-redux';
+import type { AuthState } from '../../store/modules/types';
 
 interface EventTooltipProps {
   task: Task;
@@ -55,6 +58,23 @@ const TooltipBody = styled.div`
 `;
 
 const EventTooltip: React.FC<EventTooltipProps> = ({ task, position }) => {
+  const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
+  const [calendar, setCalendar] = useState<string>("");
+
+  const fetchCalendar = useCallback(async () => {
+    try {
+      const req = await api.get(`/calendar/${task.calendar_id}`, { headers: { Authorization: `Bearer ${user.token}` } });
+      const result = req.data as Calendar;
+      setCalendar(result.name);
+    } catch(err) {
+      console.log(err);
+    }
+  }, [task, user]);
+
+  useEffect(() => {
+    fetchCalendar();
+  }, [fetchCalendar]);
+
   return (
     <TooltipContainer top={position.top} left={position.left}>
       <TooltipHeader>
@@ -62,6 +82,7 @@ const EventTooltip: React.FC<EventTooltipProps> = ({ task, position }) => {
         <TooltipTitle>{task.title}</TooltipTitle>
       </TooltipHeader>
       <TooltipBody>
+        <p>Cliente: {calendar}</p>
         <p>
           {format(new Date(task.date), "EEEE, dd 'de' MMMM", { locale: ptBR })}
         </p>
@@ -71,6 +92,14 @@ const EventTooltip: React.FC<EventTooltipProps> = ({ task, position }) => {
             : `${task.startTime || ''} - ${task.endTime || ''}`}
         </p>
         {task.description && <p>{task.description}</p>}
+        <p>Participantes</p>
+        <ol style={{ padding: 15 }}>
+          {task.users?.map(usr => {
+            return (
+              <li>{usr.name}</li>
+            );
+          })}
+        </ol>
       </TooltipBody>
     </TooltipContainer>
   );

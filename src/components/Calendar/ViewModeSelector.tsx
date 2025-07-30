@@ -1,6 +1,8 @@
 // src/components/Calendar/ViewModeSelector.tsx
 import React from 'react';
 import styled from 'styled-components';
+// 1. Importar os ícones que vamos usar
+import { FiCalendar, FiColumns, FiSquare, FiList } from 'react-icons/fi';
 import { Button } from '../Common';
 import type { ViewMode } from '../../types';
 
@@ -9,69 +11,63 @@ interface ViewModeSelectorProps {
   onModeChange: (mode: ViewMode) => void;
 }
 
+// Container ajustado para espaçar os botões
 const SelectorContainer = styled.div`
   display: flex;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-radius: ${({ theme }) => theme.borderRadius};
-  box-shadow: ${({ theme }) => theme.boxShadow};
-  overflow: hidden; // Ensures rounded corners are applied
-  margin-bottom: ${({ theme }) => theme.spacing.md};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  gap: ${({ theme }) => theme.spacing.sm}; // Espaçamento entre os botões
+  margin: 0 20px;
 `;
 
+// Botão de modo completamente reestilizado para ser circular
 const ModeButton = styled(Button)<{ $isActive: boolean }>`
-  flex: 1;
-  border-radius: 0; // Override common button rounded corners
-  background-color: ${props => props.$isActive ? props.theme.colors.primary : 'transparent'};
+  width: 44px;
+  height: 44px;
+  border-radius: 50%; // Deixa o botão perfeitamente redondo
+  padding: 0; // Remove padding para centralizar o ícone
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  // Estilos de estado ativo e inativo
+  background-color: ${props => props.$isActive ? props.theme.colors.primary : props.theme.colors.surface};
   color: ${props => props.$isActive ? props.theme.colors.surface : props.theme.colors.textSecondary};
-  font-weight: ${props => props.$isActive ? '600' : 'normal'};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  box-shadow: ${({ theme }) => theme.boxShadow};
+  transition: all 0.2s ease-in-out;
+
   &:hover {
-    background-color: ${props => props.$isActive ? props.theme.colors.primaryLight : props.theme.colors.primary}1A;
-    color: ${props => props.$isActive ? props.theme.colors.surface : props.theme.colors.primary};
-    transform: none; // Reset transform from base Button
-    box-shadow: none; // Reset box-shadow from base Button
+    transform: translateY(-2px);
+    background-color: ${props => props.$isActive ? props.theme.colors.primaryLight : props.theme.colors.background};
+    color: ${({ theme }) => theme.colors.primary};
   }
-  &:first-child {
-    border-top-left-radius: ${({ theme }) => theme.borderRadius};
-    border-bottom-left-radius: ${({ theme }) => theme.borderRadius};
-  }
-  &:last-child {
-    border-top-right-radius: ${({ theme }) => theme.borderRadius};
-    border-bottom-right-radius: ${({ theme }) => theme.borderRadius};
-  }
-  // Add a divider between buttons
+
+  // Remove estilos desnecessários do seletor antigo
   &:not(:last-child) {
-    border-right: 1px solid ${({ theme }) => theme.colors.border};
+    border-right: none;
   }
 `;
 
 const ViewModeSelector: React.FC<ViewModeSelectorProps> = ({ currentMode, onModeChange }) => {
+  // 2. Mapear os modos para ícones e títulos para facilitar a renderização
+  const viewModes = [
+    { mode: 'month', icon: <FiCalendar size={20} />, title: 'Mês' },
+    { mode: 'week', icon: <FiColumns size={20} />, title: 'Semana' },
+    { mode: 'day', icon: <FiSquare size={20} />, title: 'Dia' },
+    { mode: 'tasks', icon: <FiList size={20} />, title: 'Tarefas' },
+  ];
+
   return (
     <SelectorContainer>
-      <ModeButton
-        $isActive={currentMode === 'month'}
-        onClick={() => onModeChange('month')}
-      >
-        Mês
-      </ModeButton>
-      <ModeButton
-        $isActive={currentMode === 'week'}
-        onClick={() => onModeChange('week')}
-      >
-        Semana
-      </ModeButton>
-      <ModeButton
-        $isActive={currentMode === 'day'}
-        onClick={() => onModeChange('day')}
-      >
-        Dia
-      </ModeButton>
-      <ModeButton
-        $isActive={currentMode === 'tasks'}
-        onClick={() => onModeChange('tasks')}
-      >
-        Tarefas
-      </ModeButton>
+      {viewModes.map(({ mode, icon, title }) => (
+        <ModeButton
+          key={mode}
+          $isActive={currentMode === mode}
+          onClick={() => onModeChange(mode as ViewMode)}
+          title={title}
+        >
+          {icon}
+        </ModeButton>
+      ))}
     </SelectorContainer>
   );
 };

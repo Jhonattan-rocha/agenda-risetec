@@ -14,6 +14,7 @@ interface CalendarHeaderProps {
   onToday: () => void;
   onFilterClick: () => void;
   viewMode: 'month' | 'week' | 'day' | 'tasks';
+  ViewModeActions: React.ReactNode;
 }
 
 const HeaderContainer = styled.div`
@@ -111,7 +112,7 @@ const getHeaderTitle = (date: Date, viewMode: CalendarHeaderProps['viewMode']): 
 };
 
 
-const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, onNext, onToday, viewMode, onFilterClick }) => {
+const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, onNext, onToday, viewMode, onFilterClick, ViewModeActions }) => {
   return (
     <HeaderContainer>
       <NavButtons>
@@ -119,6 +120,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = ({ currentDate, onPrev, on
         <Button outline onClick={onNext}>&gt;</Button>
       </NavButtons>
       <Title>{getHeaderTitle(currentDate, viewMode)}</Title>
+      {ViewModeActions}
       <FilterButton outline onClick={onFilterClick}>
           <FaFilter />
       </FilterButton>

@@ -340,7 +340,6 @@ const CalendarScreen: React.FC = () => {
   return (
     <CalendarContainer>
       <MainContent>
-        <ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />
         <CalendarBody>
           <CalendarHeader
             currentDate={currentDate}
@@ -349,6 +348,7 @@ const CalendarScreen: React.FC = () => {
             onToday={handleTodayClick}
             viewMode={viewMode}
             onFilterClick={() => setIsFilterModalOpen(true)}
+            ViewModeActions={<ViewModeSelector currentMode={viewMode} onModeChange={setViewMode} />}
           />
           <ViewWrapper>
             {renderCalendarView}
