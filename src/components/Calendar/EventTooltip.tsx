@@ -1,6 +1,6 @@
 // src/components/Calendar/EventTooltip.tsx
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, type Ref } from 'react';
 import styled from 'styled-components';
 import type { Calendar, Task } from '../../types';
 import { format } from 'date-fns';
@@ -12,6 +12,7 @@ import type { AuthState } from '../../store/modules/types';
 interface EventTooltipProps {
   task: Task;
   position: { top: number; left: number };
+  ref: Ref<HTMLDivElement> | undefined;
 }
 
 const TooltipContainer = styled.div<{ top: number; left: number }>`
@@ -57,7 +58,7 @@ const TooltipBody = styled.div`
   }
 `;
 
-const EventTooltip: React.FC<EventTooltipProps> = ({ task, position }) => {
+const EventTooltip: React.FC<EventTooltipProps> = ({ task, position, ref }) => {
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const [calendar, setCalendar] = useState<string>("");
 
@@ -76,7 +77,7 @@ const EventTooltip: React.FC<EventTooltipProps> = ({ task, position }) => {
   }, [fetchCalendar]);
 
   return (
-    <TooltipContainer top={position.top} left={position.left}>
+    <TooltipContainer top={position.top} left={position.left} ref={ref}>
       <TooltipHeader>
         <ColorIndicator color={task.color} />
         <TooltipTitle>{task.title}</TooltipTitle>

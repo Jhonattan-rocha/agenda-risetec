@@ -1,5 +1,5 @@
 // src/components/Calendar/MonthView.tsx
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 import { format, isSameDay } from 'date-fns';
 import type { DayInfo, Task } from '../../types';
@@ -152,15 +152,51 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
   const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
   const [hoveredTask, setHoveredTask] = useState<Task | null>(null);
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 });
-  
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+
   const handleMouseEnter = (task: Task, event: React.MouseEvent) => {
     setHoveredTask(task);
-    setTooltipPosition({ top: event.clientY + 10, left: event.clientX + 10 });
+    setMousePosition({ x: event.clientX, y: event.clientY });
   };
 
   const handleMouseLeave = () => {
     setHoveredTask(null);
   };
+
+  // 4. useEffect para calcular a posição do tooltip
+  useEffect(() => {
+    if (hoveredTask && tooltipRef.current) {
+      const tooltipElement = tooltipRef.current;
+      const { innerWidth: windowWidth, innerHeight: windowHeight } = window;
+      const { width: tooltipWidth, height: tooltipHeight } = tooltipElement.getBoundingClientRect();
+      const offset = 15; // Pequeno espaço entre o cursor e o tooltip
+
+      let top = mousePosition.y + offset;
+      let left = mousePosition.x + offset;
+
+      // Verifica se o tooltip ultrapassa a borda inferior da tela
+      if (top + tooltipHeight > windowHeight) {
+        // Se sim, posiciona o tooltip acima do cursor
+        top = mousePosition.y - tooltipHeight - offset;
+      }
+
+      // Verifica se o tooltip ultrapassa a borda direita da tela
+      if (left + tooltipWidth > windowWidth) {
+        // Se sim, alinha o tooltip à direita do cursor
+        left = mousePosition.x - tooltipWidth - offset;
+      }
+      
+      // Garante que o tooltip não saia pela esquerda ou topo
+      if (top < 0) top = offset;
+      if (left < 0) left = offset;
+
+      setTooltipPosition({ top, left });
+    } else {
+        // Esconde o tooltip quando não há tarefa hoverada
+        setTooltipPosition({ top: -9999, left: -9999 });
+    }
+  }, [hoveredTask, mousePosition]);
 
   return (
     <>
@@ -222,7 +258,13 @@ const MonthView: React.FC<MonthViewProps> = ({ days, onDayClick, onTaskClick }) 
           );
         })}
       </MonthGrid>
-      {hoveredTask && <EventTooltip task={hoveredTask} position={tooltipPosition} />}
+      {hoveredTask && (
+        <EventTooltip 
+          ref={tooltipRef} 
+          task={hoveredTask} 
+          position={tooltipPosition} 
+        />
+      )}
     </>
   );
 };
