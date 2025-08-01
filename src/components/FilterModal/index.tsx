@@ -1,5 +1,5 @@
 // src/components/FilterModal/index.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { Button, Select, Input } from '../Common';
 import { FaPlus, FaTrash } from 'react-icons/fa';
 import { v4 as uuidv4 } from 'uuid';
@@ -136,6 +136,28 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, filters, onA
         onClose();
     }, [groups, onApplyFilters, onClose]);
 
+    // O useEffect vai cuidar de adicionar e remover o event listener
+    useEffect(() => {
+        // 1. Criamos a função que vai lidar com a tecla pressionada
+        const handleKeyDown = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') {
+                // Se a tecla for "Escape", chamamos a função para fechar o modal
+                onClose();
+            }
+        };
+        // 2. Adicionamos o listener apenas se o modal estiver aberto
+        if (isOpen) {
+            document.addEventListener('keydown', handleKeyDown);
+        }
+        // 3. A "função de limpeza" do useEffect: ESSA PARTE É CRUCIAL!
+        // Ela será executada quando o componente for "desmontado" ou antes de o efeito rodar novamente.
+        return () => {
+            // Removemos o listener para evitar memory leaks (vazamentos de memória)
+            // e para que ele não continue "escutando" depois que o modal fechar.
+            document.removeEventListener('keydown', handleKeyDown);
+        };
+        // O efeito depende de `isOpen` e `onClose`. Ele vai re-executar se um deles mudar.
+    }, [isOpen, onClose]);
 
     if (!isOpen) return null;
 

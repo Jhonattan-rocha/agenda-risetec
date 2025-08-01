@@ -104,6 +104,14 @@ const LoginPage: React.FC = () => {
     }
   };
 
+  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    // Verifica se a tecla pressionada foi "Enter"
+    if (event.key === 'Enter') {
+      // Chama a mesma função de clique do botão
+      handleLoginClick();
+    }
+  };
+
   useEffect(() => {
     try{
         if(user.isLoggedIn){
@@ -125,6 +133,7 @@ const LoginPage: React.FC = () => {
             id="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
+            onKeyDown={handleKeyPress}
           />
         </FormGroup>
         <FormGroup>
@@ -134,6 +143,7 @@ const LoginPage: React.FC = () => {
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyPress}
           />
         </FormGroup>
         {error && <ErrorMessage>{error}</ErrorMessage>}
