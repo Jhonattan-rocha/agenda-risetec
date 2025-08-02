@@ -8,7 +8,13 @@ import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import ActivityIndicator from '../ActivityIndicator';
 
-// --- ESTILOS ---
+// --- NOVO: Estilo para exibir as mensagens de erro ---
+const ErrorMessage = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.8rem;
+  margin-top: 4px;
+`;
+
 const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   top: 0;
@@ -41,7 +47,11 @@ const ModalHeader = styled.div`
   h2 { margin: 0; }
 `;
 
-const FormGroup = styled.div` margin-bottom: 1rem; `;
+const FormGroup = styled.div` 
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 1rem; 
+`;
 const Label = styled.label` display: block; margin-bottom: .5rem; font-weight: 500;`;
 const Input = styled.input`
   width: 100%;
@@ -67,7 +77,6 @@ const ModalFooter = styled.div`
   margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
-// --- LÓGICA DO COMPONENTE ---
 interface UserModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -82,6 +91,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
     const [isFetchingProfiles, setIsFetchingProfiles] = useState(false);
     const authUser = useSelector((state: { authreducer: AuthState }) => state.authreducer);
     const isEditing = !!user?.id;
+    // --- NOVO: Estado para os erros de validação ---
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const fetchProfiles = useCallback(async () => {
         setIsFetchingProfiles(true);
@@ -112,36 +123,50 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
                     phone_number: '',
                 });
             }
+            // Limpa os erros ao abrir
+            setErrors({});
+            setPassword('');
         }
     }, [user, isOpen, fetchProfiles]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
+        // Limpa o erro do campo que está sendo alterado
+        if (errors[name]) {
+            setErrors(prev => ({...prev, [name]: ''}));
+        }
         setCurrentUser(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleSave = async () => {
-        if (!currentUser.name || !currentUser.email || !currentUser.profile_id || !currentUser.phone_number) {
-            alert("Nome, email, telefone e perfil são obrigatórios.");
-            return;
+    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+    const validateFields = (): boolean => {
+        const newErrors: Record<string, string> = {};
+        if (!currentUser.name?.trim()) newErrors.name = "O nome é obrigatório.";
+        if (!currentUser.email?.trim()) newErrors.email = "O e-mail é obrigatório.";
+        if (!currentUser.phone_number?.trim()) newErrors.phone_number = "O telefone é obrigatório.";
+        if (!currentUser.profile_id) newErrors.profile_id = "O perfil é obrigatório.";
+        
+        if (!isEditing && !password.trim()) {
+            newErrors.password = "A senha é obrigatória para novos usuários.";
         }
-        if (!isEditing && !password) {
-            alert("A senha é obrigatória para criar um novo usuário.");
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    }
+
+    const handleSave = async () => {
+        // Chama a validação antes de prosseguir
+        if (!validateFields()) {
             return;
         }
 
         setIsLoading(true);
-
-        const payload: Partial<User> & { password?: string } = {
-            ...currentUser,
-        };
+        const payload: Partial<User> & { password?: string } = { ...currentUser };
 
         if (password) {
             payload.password = password;
         }
-        // Assegura que o profile_id seja um número, se a API esperar um
         payload.profile_id = String(currentUser.profile_id);
-
 
         const url = isEditing ? `/user/${user?.id}` : '/user';
         const method = isEditing ? 'put' : 'post';
@@ -173,21 +198,28 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
                 <FormGroup>
                     <Label htmlFor="name">Nome</Label>
                     <Input id="name" name="name" type="text" value={currentUser.name || ''} onChange={handleChange} />
+                    {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
                 </FormGroup>
 
                 <FormGroup>
                     <Label htmlFor="email">Email</Label>
                     <Input id="email" name="email" type="email" value={currentUser.email || ''} onChange={handleChange} />
+                    {errors.email && <ErrorMessage>{errors.email}</ErrorMessage>}
                 </FormGroup>
 
                 <FormGroup>
                     <Label htmlFor="password">Senha</Label>
-                    <Input id="password" name="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder={isEditing ? 'Deixe em branco para não alterar' : ''} />
+                    <Input id="password" name="password" type="password" value={password} onChange={(e) => {
+                        if(errors.password) setErrors(prev => ({...prev, password: ''}));
+                        setPassword(e.target.value)
+                    }} placeholder={isEditing ? 'Deixe em branco para não alterar' : ''} />
+                    {errors.password && <ErrorMessage>{errors.password}</ErrorMessage>}
                 </FormGroup>
 
                 <FormGroup>
-                    <Label htmlFor="password">Telefone</Label>
+                    <Label htmlFor="phone_number">Telefone</Label>
                     <Input id="phone_number" name="phone_number" type="tel" value={currentUser.phone_number || ''} onChange={handleChange} placeholder={'Ex: 11900000000'} />
+                    {errors.phone_number && <ErrorMessage>{errors.phone_number}</ErrorMessage>}
                 </FormGroup>
 
                 <FormGroup>
@@ -207,8 +239,8 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
                             ))}
                         </Select>
                     )}
+                    {errors.profile_id && <ErrorMessage>{errors.profile_id}</ErrorMessage>}
                 </FormGroup>
-
 
                 <ModalFooter>
                     {isLoading ? (

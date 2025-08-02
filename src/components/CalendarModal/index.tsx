@@ -8,7 +8,14 @@ import { useSelector } from 'react-redux';
 import api from '../../services/axios';
 import ActivityIndicator from '../ActivityIndicator';
 import { usePermission } from '../../hooks/usePermission';
-import { convertToMinutes, convertFromMinutes, type TimeUnit } from '../../utils/timeConverter'; // NOVO
+import { convertToMinutes, convertFromMinutes, type TimeUnit } from '../../utils/timeConverter';
+
+// --- NOVO: Estilo para exibir as mensagens de erro ---
+const ErrorMessage = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.8rem;
+  margin-top: 4px;
+`;
 
 interface CalendarModalProps {
   isOpen: boolean;
@@ -113,7 +120,7 @@ const ColorPickerContainer = styled.div`
   display: flex;
   gap: ${({ theme }) => theme.spacing.sm};
   flex-wrap: wrap;
-  align-items: center; // Alinha o input de cor com as bolinhas
+  align-items: center;
 `;
 
 const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
@@ -132,7 +139,6 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
   }
 `;
 
-// NOVO: Estilo para o input de cor customizada
 const CustomColorInput = styled.input.attrs({ type: 'color' })`
   width: 36px;
   height: 36px;
@@ -193,46 +199,34 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   const canSave = isEditing ? canUpdateCalendar : canCreateCalendar;
   const [timeValue, setTimeValue] = useState<number>(30);
   const [timeUnit, setTimeUnit] = useState<TimeUnit>('minutes');
+  // --- NOVO: Estado para os erros de validação ---
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // NOVO: Verifica se a cor atual é uma das predefinidas
   const isCustomColor = !predefinedColors.includes(currentCalendar.color || '');
 
-  // O useEffect vai cuidar de adicionar e remover o event listener
   useEffect(() => {
-    
-    // 1. Criamos a função que vai lidar com a tecla pressionada
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        // Se a tecla for "Escape", chamamos a função para fechar o modal
         onClose();
       }
     };
 
-    // 2. Adicionamos o listener apenas se o modal estiver aberto
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
     }
 
-    // 3. A "função de limpeza" do useEffect: ESSA PARTE É CRUCIAL!
-    // Ela será executada quando o componente for "desmontado" ou antes de o efeito rodar novamente.
     return () => {
-      // Removemos o listener para evitar memory leaks (vazamentos de memória)
-      // e para que ele não continue "escutando" depois que o modal fechar.
       document.removeEventListener('keydown', handleKeyDown);
     };
-    
-    // O efeito depende de `isOpen` e `onClose`. Ele vai re-executar se um deles mudar.
   }, [isOpen, onClose]);
 
   useEffect(() => {
     if (calendar) {
       setCurrentCalendar(calendar);
-      // Converte os minutos do backend para um formato amigável para a UI
       const [value, unit] = convertFromMinutes(calendar.notification_time_before);
       setTimeValue(value);
       setTimeUnit(unit);
     } else {
-      // Estado inicial para um novo calendário
       setCurrentCalendar({
         name: '',
         color: predefinedColors[0],
@@ -244,17 +238,33 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
       setTimeValue(30);
       setTimeUnit('minutes');
     }
+    // Limpa os erros ao abrir ou trocar de calendário
+    setErrors({});
   }, [calendar, isOpen]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    // Limpa o erro do campo que está sendo alterado
+    if (errors[name]) {
+        setErrors(prev => ({...prev, [name]: ''}));
+    }
     const checked = (e.target as HTMLInputElement).checked;
     setCurrentCalendar(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
+  
+  // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+  const validateFields = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!currentCalendar.name?.trim()) {
+      newErrors.name = 'O nome do calendário é obrigatório.';
+    }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = () => {
-    if (!currentCalendar.name) {
-      alert('O nome do calendário é obrigatório.');
+    // Chama a validação antes de prosseguir
+    if (!validateFields()) {
       return;
     }
     const totalMinutes = convertToMinutes(timeValue, timeUnit);
@@ -265,7 +275,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
       ? api.put(`/calendar/${calendar?.id}`, {...currentCalendar, notification_time_before: totalMinutes}, {
           headers: { Authorization: `Bearer ${user.token}` }
         })
-      : api.post("/calendar", {...currentCalendar, notification_time_before: totalMinutes}, {
+      : api.post("/calendar", {...currentCalendar, notification_time_before: totalMinutes, owner_id: user.user.id}, {
           headers: { Authorization: `Bearer ${user.token}` }
         });
     
@@ -313,8 +323,8 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
               value={currentCalendar.name || ''}
               onChange={handleChange}
               placeholder="Nome do calendário"
-              required
             />
+            {errors.name && <ErrorMessage>{errors.name}</ErrorMessage>}
           </FormGroup>
           <FormGroup>
             <Label>Cor</Label>
@@ -327,7 +337,6 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
                   onClick={() => setCurrentCalendar(prev => ({ ...prev, color }))}
                 />
               ))}
-              {/* NOVO: Seletor de cor customizada */}
               <ColorSwatch $color={isCustomColor ? currentCalendar.color! : '#ccc'} $isSelected={isCustomColor}>
                   <CustomColorInput
                       name="color"

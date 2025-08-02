@@ -8,7 +8,13 @@ import { useSelector } from 'react-redux';
 import type { AuthState } from '../../store/modules/types';
 import ActivityIndicator from '../ActivityIndicator';
 
-// --- ESTILOS ---
+// --- NOVO: Estilo para exibir as mensagens de erro ---
+const ErrorMessage = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.8rem;
+  margin-top: 4px;
+`;
+
 const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   position: fixed;
   top: 0;
@@ -19,7 +25,7 @@ const ModalOverlay = styled.div<{ $isOpen: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1050; // Z-index maior para ficar sobre outros elementos
+  z-index: 1050;
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -80,8 +86,6 @@ const ModalFooter = styled.div`
   margin-top: ${({ theme }) => theme.spacing.lg};
 `;
 
-
-// --- LÓGICA DO COMPONENTE ---
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -93,6 +97,8 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
   const [isLoading, setIsLoading] = useState(false);
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer);
   const isEditing = !!profile?.id;
+  // --- NOVO: Estado para os erros de validação ---
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (profile) {
@@ -100,15 +106,26 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
     } else {
       setName('');
     }
-  }, [profile]);
+    // Limpa o erro ao abrir o modal
+    setError('');
+  }, [profile, isOpen]);
+
+  // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+  const validateField = (): boolean => {
+    if (!name.trim()) {
+      setError("O nome do perfil é obrigatório.");
+      return false;
+    }
+    return true;
+  };
 
   const handleSave = async () => {
-    if (!name) {
-      alert("O nome do perfil é obrigatório.");
+    // Chama a validação antes de prosseguir
+    if (!validateField()) {
       return;
     }
-    setIsLoading(true);
 
+    setIsLoading(true);
     const payload = { name };
     const url = isEditing ? `/user_profile/${profile?.id}` : '/user_profile/';
     const method = isEditing ? 'put' : 'post';
@@ -118,7 +135,7 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
         headers: { Authorization: `Bearer ${user.token}` }
       });
       alert(`Perfil ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
-      onClose(); // Fecha o modal e dispara a atualização na tela de perfis
+      onClose();
     } catch (error) {
       console.error(`Erro ao salvar perfil:`, error);
       alert(`Não foi possível salvar o perfil.`);
@@ -126,6 +143,12 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
       setIsLoading(false);
     }
   };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Limpa o erro ao começar a digitar
+    if(error) setError('');
+    setName(e.target.value);
+  }
 
   if (!isOpen) return null;
 
@@ -143,11 +166,10 @@ const ProfileModal: React.FC<ProfileModalProps> = ({ isOpen, onClose, profile })
             id="profileName"
             type="text"
             value={name}
-            onChange={(e) => setName(e.target.value)}
+            onChange={handleNameChange}
           />
+          {error && <ErrorMessage>{error}</ErrorMessage>}
         </FormGroup>
-
-        {/* Adicionar campos de permissão aqui se necessário */}
 
         <ModalFooter>
           {isLoading ? (

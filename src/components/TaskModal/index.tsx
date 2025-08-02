@@ -19,6 +19,14 @@ import type { RecurrenceEditChoice } from '../RecurrenceEditChoiceModal'; // Imp
 import { getText } from '../../utils/dateUtils';
 import { convertToMinutes, convertFromMinutes, type TimeUnit } from '../../utils/timeConverter'; // NOVO
 
+// --- NOVO: Estilo para exibir as mensagens de erro ---
+const ErrorMessage = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.8rem;
+  margin-top: 4px;
+`;
+
+
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -78,6 +86,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const calendarIdForPermission = currentTask.calendar_id || task?.calendar_id;
 
+  // --- NOVO: Estado para os erros de validação ---
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+
   const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
   const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
   const canDeleteTask = usePermission('delete', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
@@ -102,43 +114,44 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     setCurrentTask({
       ...taskToLoad,
       date: task ? (task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString())) : (initialDate || new Date()),
-      endDate: task?.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : new Date(),
+      endDate: task?.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : undefined,
       recurring_rule: task?.recurring_rule || '',
       color: task ? task.color : undefined, 
     });
+    // Limpa os erros ao abrir o modal
+    setErrors({});
   }, [task, initialDate, isOpen]); // Roda sempre que o modal abrir
 
-  // O useEffect vai cuidar de adicionar e remover o event listener
   useEffect(() => {
-      // 1. Criamos a função que vai lidar com a tecla pressionada
       const handleKeyDown = (event: KeyboardEvent) => {
           if (event.key === 'Escape') {
-              // Se a tecla for "Escape", chamamos a função para fechar o modal
               onClose();
           }
       };
-      // 2. Adicionamos o listener apenas se o modal estiver aberto
       if (isOpen) {
           document.addEventListener('keydown', handleKeyDown);
       }
-      // 3. A "função de limpeza" do useEffect: ESSA PARTE É CRUCIAL!
-      // Ela será executada quando o componente for "desmontado" ou antes de o efeito rodar novamente.
       return () => {
-          // Removemos o listener para evitar memory leaks (vazamentos de memória)
-          // e para que ele não continue "escutando" depois que o modal fechar.
           document.removeEventListener('keydown', handleKeyDown);
       };
-      // O efeito depende de `isOpen` e `onClose`. Ele vai re-executar se um deles mudar.
   }, [isOpen, onClose]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
+    // Limpa o erro do campo que está sendo alterado
+    if (errors[name]) {
+      setErrors(prev => ({...prev, [name]: ''}));
+    }
     const checked = (e.target as HTMLInputElement).checked;
     setCurrentTask(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
   
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+     // Limpa o erro do campo de data
+    if (errors[name]) {
+      setErrors(prev => ({...prev, [name]: ''}));
+    }
     const dateValue = value ? new Date(value + 'T12:00:00') : undefined;
     setCurrentTask(prev => ({ ...prev, [name]: dateValue }));
   };
@@ -157,25 +170,42 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     });
   };
 
+    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+    const validateFields = (): boolean => {
+      const newErrors: Record<string, string> = {};
+      if (!currentTask.title?.trim()) {
+        newErrors.title = 'O título é obrigatório.';
+      }
+      if (!currentTask.date) {
+        newErrors.date = 'A data de início é obrigatória.';
+      }
+      if (!currentTask.calendar_id) {
+        newErrors.calendar_id = 'O calendário é obrigatório.';
+      }
+  
+      setErrors(newErrors);
+      // Retorna true se o objeto de erros estiver vazio
+      return Object.keys(newErrors).length === 0;
+    };
+
+
   const handleSave = () => {
-    if (!currentTask.title || !currentTask.date || !currentTask.calendar_id) {
-      alert('Título, Data de Início e Calendário são obrigatórios.');
+    // Chama a validação antes de prosseguir
+    if (!validateFields()) {
       return;
     }
+
     setIsLoading(true);
     const totalMinutes = timeValue && timeUnit ? convertToMinutes(Number(timeValue), timeUnit) : null;
-
     const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
     
-    // ATUALIZAÇÃO FINAL: Constrói o payload para a API
     const taskPayload = {
       ...currentTask,
       user_ids,
       notification_time_before: totalMinutes,
       calendar_id: parseInt(String(currentTask.calendar_id), 10),
-      // Adiciona os campos para edição de recorrência
       edit_mode: editMode,
-      occurrence_date: task?.date, // A data da ocorrência original que foi clicada
+      occurrence_date: task?.date,
     };
 
     const eventIdForURL = task?.originalId || task?.id;
@@ -195,8 +225,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   };
 
   const handleDelete = () => {
-    // A lógica de deleção para eventos recorrentes agora é tratada no CalendarScreen
-    // Este handleDelete é apenas para eventos não-recorrentes.
     const eventIdToDelete = currentTask.originalId || currentTask.id;
     if (eventIdToDelete && window.confirm('Tem certeza que deseja excluir este evento?')) {
       setIsLoading(true);
@@ -210,13 +238,11 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         console.log(err);
       });
     } else {
-        // Se for recorrente, apenas fecha o modal, pois a escolha de deleção será tratada no CalendarScreen.
         onClose();
     }
   };
   
   const fetchAllData = useCallback(async () => {
-    // ... (função sem alterações)
     try {
         const [usersRes, calendarsRes] = await Promise.all([
             api.get("/user", { headers: { Authorization: `Bearer ${user.token}` }}),
@@ -235,14 +261,10 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     }
   }, [isOpen, fetchAllData]);
 
-  // --- NOVO useEffect PARA SINCRONIZAR A COR ---
   useEffect(() => {
-    // Só executa se houver um ID de calendário e a lista de calendários estiver carregada
     if (currentTask.calendar_id && calendars.length > 0) {
       const selectedCalendar = calendars.find(c => String(c.id) === String(currentTask.calendar_id));
       if (selectedCalendar) {
-        // Atualiza a cor no estado da tarefa, mas SÓ SE a cor atual não tiver sido
-        // modificada manualmente pelo usuário (ou se for uma nova tarefa sem cor)
         setCurrentTask(prev => ({
           ...prev,
           color: prev.color || selectedCalendar.color
@@ -262,16 +284,18 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const { name, value } = e.target;
+      // Limpa o erro do campo que está sendo alterado
+      if (errors[name]) {
+        setErrors(prev => ({...prev, [name]: ''}));
+      }
       
-      // Lógica especial para quando o calendário muda
       if (name === 'calendar_id') {
           const selectedCalendar = calendars.find(c => String(c.id) === value);
           if (selectedCalendar) {
-              // Atualiza o ID do calendário E a cor da tarefa ao mesmo tempo
               setCurrentTask(prev => ({ 
                   ...prev, 
                   calendar_id: value,
-                  color: selectedCalendar.color // Define a cor do calendário como a nova cor da tarefa
+                  color: selectedCalendar.color
               }));
           }
       } else {
@@ -292,7 +316,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
           <ModalBody>
             <FormGroup>
               <Label htmlFor="title">Título</Label>
-              <Input id="title" name="title" value={currentTask.title || ''} onChange={handleChange} required />
+              <Input id="title" name="title" value={currentTask.title || ''} onChange={handleChange} />
+              {errors.title && <ErrorMessage>{errors.title}</ErrorMessage>}
             </FormGroup>
 
             <FormGroup>
@@ -308,7 +333,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
             <FormRow>
               <FormGroup>
                 <Label htmlFor="date">Data de Início</Label>
-                <Input id="date" name="date" type="date" value={currentTask.date ? format(new Date(currentTask.date), 'yyyy-MM-dd') : ''} onChange={handleDateChange} required />
+                <Input id="date" name="date" type="date" value={currentTask.date ? format(new Date(currentTask.date), 'yyyy-MM-dd') : ''} onChange={handleDateChange} />
+                {errors.date && <ErrorMessage>{errors.date}</ErrorMessage>}
               </FormGroup>
 
               <FormGroup>
@@ -422,12 +448,13 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
             <FormGroup>
               <Label htmlFor="calendar_id">Calendário</Label>
-              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleSelectChange} required >
+              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleSelectChange} >
                 <option value="" disabled>Selecione um calendário</option>
                 {calendars.map(calendar => (
                   <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
                 ))}
               </Select>
+              {errors.calendar_id && <ErrorMessage>{errors.calendar_id}</ErrorMessage>}
             </FormGroup>
 
             <FormGroup>
