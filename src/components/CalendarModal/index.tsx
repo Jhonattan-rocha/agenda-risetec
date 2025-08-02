@@ -140,8 +140,8 @@ const ColorSwatch = styled.div<{ $color: string; $isSelected: boolean }>`
 `;
 
 const CustomColorInput = styled.input.attrs({ type: 'color' })`
-  width: 36px;
-  height: 36px;
+  width: 28px;
+  height: 28px;
   border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: 50%;
   cursor: pointer;
