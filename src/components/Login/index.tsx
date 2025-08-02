@@ -1,7 +1,7 @@
-// src/components/LoginPage.tsx
+// src/components/Login/index.tsx
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { Button, Card } from '../Common';
+import { Button } from '../Common';
 import api from '../../services/axios';
 import { useDispatch, useSelector } from 'react-redux';
 import * as actions from '../../store/modules/authReducer/actions';
@@ -9,67 +9,162 @@ import type { AuthState } from '../../store/modules/types';
 import { useNavigate } from 'react-router-dom';
 import ActivityIndicator from '../ActivityIndicator';
 
-const LoginPageContainer = styled.div`
+// --- NOVOS ESTILOS PARA A TELA DE LOGIN ---
+
+const LoginLayout = styled.div`
   display: flex;
-  justify-content: center;
-  align-items: center;
   min-height: 100vh;
-  background-color: ${({ theme }) => theme.colors.background};
+  width: 100%;
+  font-family: Arial, sans-serif;
+  background-color: #E2E2E2; // Cor de fundo cinza da coluna do formulário
 `;
 
-const LoginForm = styled(Card)`
-  padding: ${({ theme }) => theme.spacing.xl};
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
+const IllustrationColumn = styled.div`
+  flex: 1;
+  background-color: #013A46; // Cor de fundo da coluna de ilustração
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem;
+  color: white;
 
-  h2 {
-    margin-bottom: ${({ theme }) => theme.spacing.lg};
-    color: ${({ theme }) => theme.colors.textPrimary};
+  .main-illustration {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    max-width: 500px;
+  }
+
+  // Media query para esconder a coluna em telas menores
+  @media (max-width: 900px) {
+    display: none;
   }
 `;
 
-const FormGroup = styled.div`
+const FormColumn = styled.div`
+  flex: 1;
   display: flex;
-  flex-direction: column;
-  margin-bottom: ${({ theme }) => theme.spacing.md};
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+`;
+
+const LoginFormContainer = styled.div`
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+`;
+
+const Logo = styled.div`
+  margin-bottom: 1.5rem;
+  height: 50px;
+  img {
+    height: 100%;
+    width: auto;
+  }
+`;
+
+const Subheading = styled.p`
+  color: #606770;
+  margin-bottom: 2rem;
+  font-size: 0.9rem;
+`;
+
+const StyledForm = styled.form`
   width: 100%;
 `;
 
-const Label = styled.label`
-  font-size: 0.9rem;
-  color: ${({ theme }) => theme.colors.textSecondary};
-  margin-bottom: ${({ theme }) => theme.spacing.xs};
+const FormGroup = styled.div`
+  margin-bottom: 1rem;
   text-align: left;
 `;
 
+const Label = styled.label`
+  font-size: 0.8rem;
+  color: #606770;
+  margin-bottom: 0.3rem;
+  display: block;
+`;
+
 const Input = styled.input`
-  padding: ${({ theme }) => theme.spacing.sm};
-  border: 1px solid ${({ theme }) => theme.colors.border};
-  border-radius: ${({ theme }) => theme.borderRadius};
+  width: 100%;
+  padding: 0.8rem;
+  border: 1px solid #dddfe2;
+  border-radius: 6px;
   font-size: 1rem;
-  background-color: ${({ theme }) => theme.colors.surface};
-  color: ${({ theme }) => theme.colors.textPrimary};
-  transition: border-color 0.2s ease;
+  background-color: #FFFFFF;
+  color: #1c1e21;
+
   &:focus {
     outline: none;
-    border-color: ${({ theme }) => theme.colors.primary};
+    border-color: #005662;
+    box-shadow: 0 0 0 2px rgba(0, 86, 98, 0.2);
   }
 `;
 
 const LoginButton = styled(Button)`
   width: 100%;
-  padding: ${({ theme }) => theme.spacing.md};
+  padding: 0.8rem;
   font-size: 1.1rem;
-  font-weight: 500;
-  margin-top: ${({ theme }) => theme.spacing.lg};
+  font-weight: bold;
+  margin-top: 1rem;
+  border-radius: 6px;
+  background-color: #005662;
+  border: none;
+  color: white;
+
+  &:hover {
+     background-color: #003B46;
+  }
+`;
+
+const ExtraOptions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+
+  a {
+    color: #005662;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+`;
+
+const CheckboxWrapper = styled.label`
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: #606770;
+
+  input {
+    margin-right: 0.5rem;
+  }
 `;
 
 const ErrorMessage = styled.p`
-  color: ${({ theme }) => theme.colors.error};
+  color: #D93025;
   font-size: 0.85rem;
-  margin-top: ${({ theme }) => theme.spacing.sm};
+  margin-top: 1.5rem;
+  background-color: #FAD2CF;
+  border: 1px solid #D93025;
+  padding: 0.75rem;
+  border-radius: 6px;
+  text-align: center;
 `;
+
+const FooterText = styled.p`
+  color: #8a8d91;
+  font-size: 0.7rem;
+  margin-top: 4rem;
+`;
+
 
 const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -80,7 +175,8 @@ const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const handleLoginClick = () => {
+  const handleLoginClick = (e: React.FormEvent) => {
+    e.preventDefault(); // Previne o recarregamento da página
     if (username && password) {
         setIsLoading(true);
         const req = api.post("/token", {username, password}, {
@@ -90,72 +186,92 @@ const LoginPage: React.FC = () => {
         });
 
         req.then((response) => {
-            dispatch(actions.LoginSuccess({ email: response.data.user.email, name: response.data.user.name, id: response.data.user.id, token: response.data.access_token, profile: response.data.user.profile}));
+            dispatch(actions.LoginSuccess({ 
+              email: response.data.user.email, 
+              id: response.data.user.id, 
+              name: response.data.user.name, 
+              token: response.data.access_token, 
+              profile: response.data.user.profile
+            }));
             setError(null);
             setUsername('');
             setPassword('');
             setIsLoading(false);
         }).catch(err => {
-            setError(String(err));
-            setIsLoading(false);
+          console.log(err);
+          setError("Usuário ou senha inválidos.");
+          setIsLoading(false);
         })
     } else {
       setError('Por favor, preencha todos os campos.');
     }
   };
 
-  const handleKeyPress = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    // Verifica se a tecla pressionada foi "Enter"
-    if (event.key === 'Enter') {
-      // Chama a mesma função de clique do botão
-      handleLoginClick();
-    }
-  };
-
   useEffect(() => {
-    try{
-        if(user.isLoggedIn){
-            navigate("/");            
-        }
-    }catch(err){
-        console.log(err);
+    if(user.isLoggedIn){
+        navigate("/");            
     }
   }, [user, navigate]);
 
   return (
-    <LoginPageContainer>
-      <LoginForm>
-        <h2>Login Agenda</h2>
-        <FormGroup>
-          <Label htmlFor="username">Usuário</Label>
-          <Input
-            type="text"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={handleKeyPress}
-          />
-        </FormGroup>
-        <FormGroup>
-          <Label htmlFor="password">Senha</Label>
-          <Input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={handleKeyPress}
-          />
-        </FormGroup>
-        {error && <ErrorMessage>{error}</ErrorMessage>}
-        {isLoading ? (
-          <ActivityIndicator />
-        ) : (
-          <LoginButton primary onClick={handleLoginClick}>
-            Entrar
-          </LoginButton>
-        )}
-      </LoginForm>
-    </LoginPageContainer>
+    <LoginLayout>
+        <IllustrationColumn>
+            <div className="main-illustration">
+                <img src="/caminho/para/ilustracao.png" alt="Ilustração de nuvem e tecnologia" />
+            </div>
+            <img src="/caminho/para/logo-astartec.png" alt="Logo Astartec" style={{ width: '120px' }}/>
+        </IllustrationColumn>
+
+        <FormColumn>
+            <LoginFormContainer>
+                <Logo>
+                    <img src="/caminho/para/logo-susari.png" alt="Logo Susari" />
+                </Logo>
+                <Subheading>Autentique-se para acessar o sistema</Subheading>
+
+                <StyledForm onSubmit={handleLoginClick}>
+                    <FormGroup>
+                        <Label htmlFor="username">Usuário</Label>
+                        <Input
+                            type="text"
+                            id="username"
+                            value={username}
+                            onChange={(e) => setUsername(e.target.value)}
+                        />
+                    </FormGroup>
+                    <FormGroup>
+                        <Label htmlFor="password">Senha</Label>
+                        <Input
+                            type="password"
+                            id="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                        />
+                    </FormGroup>
+                    
+                    <ExtraOptions>
+                        <a href="#">Esqueceu sua senha?</a>
+                        <CheckboxWrapper>
+                            <input type="checkbox" />
+                            Lembrar de mim
+                        </CheckboxWrapper>
+                    </ExtraOptions>
+
+                    {isLoading ? (
+                        <div style={{ marginTop: '1rem' }}><ActivityIndicator /></div>
+                    ) : (
+                        <LoginButton primary type="submit">
+                            Entrar
+                        </LoginButton>
+                    )}
+
+                    {error && <ErrorMessage>{error}</ErrorMessage>}
+                </StyledForm>
+                
+                <FooterText>ASTARTEC Copyright © 2010-2025. Todos os direitos reservados.</FooterText>
+            </LoginFormContainer>
+        </FormColumn>
+    </LoginLayout>
   );
 };
 
