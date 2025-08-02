@@ -102,7 +102,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     setCurrentTask({
       ...taskToLoad,
       date: task ? (task.date instanceof Date ? task.date : parseISO(new Date(task.date).toISOString())) : (initialDate || new Date()),
-      endDate: task?.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : undefined,
+      endDate: task?.endDate ? (task.endDate instanceof Date ? task.endDate : parseISO(new Date(task.endDate).toISOString())) : new Date(),
       recurring_rule: task?.recurring_rule || '',
       color: task ? task.color : undefined, 
     });

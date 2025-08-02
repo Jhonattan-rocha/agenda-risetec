@@ -5,6 +5,7 @@ const initialState = {
     isLoggedIn: false,
     token: "",
     user: {
+        name: "",
         email: "",
         id: -1,
         profile: {}
@@ -18,6 +19,7 @@ export default function recuder(state = initialState, action: type.LoggedActionP
             if(action.payload){
                 const newState = {...state};
                 newState.user = {
+                    name: action.payload.name,
                     email: action.payload.email,
                     id: action.payload.id,
                     profile: action.payload.profile

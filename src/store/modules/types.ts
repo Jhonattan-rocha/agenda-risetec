@@ -10,6 +10,7 @@ export interface AuthState {
     token: string,
     user: {
         username: string,
+        name: string,
         id: number,
         profile: Profile | null
     }
@@ -29,7 +30,7 @@ export interface SuccessProps {
 }
 
 export interface LoggedActionProps extends ActionProps {
-    payload?: { token: string, email: string, id: number, profile: Profile }
+    payload?: { token: string, email: string, id: number, profile: Profile, name: string }
 }
 
 export interface LoggedPayloadProps {
@@ -37,4 +38,5 @@ export interface LoggedPayloadProps {
     email: string;
     id: number;
     profile: Profile;
+    name: string;
 }

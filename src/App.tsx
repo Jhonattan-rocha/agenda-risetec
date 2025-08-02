@@ -103,7 +103,8 @@ const AppContent: React.FC = () => {
         <UserMenuContainer>
           <UserAvatarButton onClick={() => setMenuOpen(!menuOpen)}>
             <FaUserCircle size={24} />
-            <span>{user.username}</span>
+            {/* ATUALIZADO: Exibe user.name ao invés de user.username */}
+            <span>{user.name}</span>
           </UserAvatarButton>
           <DropdownMenu $isOpen={menuOpen}>
             <DropdownItem to="/settings" onClick={() => setMenuOpen(false)}>
@@ -134,7 +135,7 @@ const App: React.FC = () => {
     if (savedTheme === 'light') {
       return 'light';
     }
-    return 'dark'; // Padrão para o tema escuro
+    return 'dark';
   });
 
   useEffect(() => {

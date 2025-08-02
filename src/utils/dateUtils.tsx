@@ -122,7 +122,7 @@ export const getDaysInMonth = (date: Date): DayInfo[] => {
 };
 
 // Objeto com as traduções para pt-BR
-const ptBrTranslations = {
+const ptBrTranslations: {[key: string]: string} = {
     'every': 'a cada',
     'day': 'dia',
     'days': 'dias',
@@ -150,13 +150,8 @@ const ptBrTranslations = {
     'Thursday': 'Quinta-feira',
     'Friday': 'Sexta-feira',
     'Saturday': 'Sábado',
-    '0': 'Domingo',
-    '1': 'Segunda-feira',
-    '2': 'Terça-feira',
-    '3': 'Quarta-feira',
-    '4': 'Quinta-feira',
-    '5': 'Sexta-feira',
-    '6': 'Sábado',
+    'for': 'por',
+    'times': 'vezes',
     // Meses
     'January': 'Janeiro',
     'February': 'Fevereiro',
@@ -178,7 +173,7 @@ const ptBrTranslations = {
 
 // Função que a biblioteca rrule usará para obter as traduções
 const getText = (str: string): string => {
-    return (ptBrTranslations as any)[str] || str;
+    return ptBrTranslations[str] || str;
 }
 
 // src/utils/getInitials.ts

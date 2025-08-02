@@ -2,14 +2,15 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Card } from '../Common';
-import type { Task } from '../../types';
+import type { Calendar, Task } from '../../types'; // Adicionado Calendar
 import { format, isFuture, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa'; // Importar ícones
+import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 
 interface UpcomingTasksProps {
   tasks: Task[];
   onTaskClik: (task: Task) => void;
+  calendars: Calendar[]; // Adicionada a propriedade calendars
 }
 
 const UpcomingTasksContainer = styled(Card)`
@@ -48,18 +49,27 @@ const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean; }>
   }
   .task-details {
     flex-grow: 1;
+    min-width: 0; // Essencial para o text-overflow funcionar
+    h4, p { // Aplicar truncamento de texto
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     h4 {
       font-size: 0.95rem;
       margin: 0;
       color: ${({ theme }) => theme.colors.textPrimary};
-      display: flex; // Para alinhar o ícone
+      display: flex;
       align-items: center;
       gap: 6px;
     }
     p {
       font-size: 0.8rem;
       color: ${({ theme }) => theme.colors.textSecondary};
-      margin: 0;
+      margin: 2px 0 0 0;
+    }
+    .client-name {
+      font-style: italic;
     }
   }
 `;
@@ -80,7 +90,7 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     }
 };
 
-const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
+const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik, calendars }) => {
   const sortedTasks = tasks
     .filter(task => isFuture(task.date) || isToday(task.date))
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -90,30 +100,36 @@ const UpcomingTasks: React.FC<UpcomingTasksProps> = ({ tasks, onTaskClik }) => {
       <h3>Próximas Tarefas</h3>
       {sortedTasks.length > 0 ? (
         <div className="task-list">
-          {sortedTasks.map(task => (
-            <TaskItemWrapper 
-              key={task.id} 
-              $color={task.color} 
-              $isCancelled={task.status === 'cancelled'} // Passar a prop
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onTaskClik?.(task);
-              }}
-            >
-              <div className="color-dot" />
-              <div className="task-details">
-                <h4>
-                  <StatusIcon status={task.status} /> {/* Adicionar o ícone */}
-                  {task.title}
-                </h4>
-                <p>
-                  {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
-                  {task.startTime && ` às ${task.startTime}`}
-                </p>
-              </div>
-            </TaskItemWrapper>
-          ))}
+          {sortedTasks.map(task => {
+            // Encontra o calendário correspondente para exibir o nome do cliente
+            const calendar = calendars?.find(c => String(c.id) === String(task.calendar_id));
+            return (
+              <TaskItemWrapper 
+                key={task.id} 
+                $color={task.color} 
+                $isCancelled={task.status === 'cancelled'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onTaskClik?.(task);
+                }}
+              >
+                <div className="color-dot" />
+                <div className="task-details">
+                  <h4>
+                    <StatusIcon status={task.status} />
+                    {task.title}
+                  </h4>
+                  {/* Exibe o nome do cliente (calendário) */}
+                  {calendar && <p className="client-name">{calendar.name}</p>}
+                  <p>
+                    {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
+                    {task.startTime && ` às ${task.startTime}`}
+                  </p>
+                </div>
+              </TaskItemWrapper>
+            )
+          })}
         </div>
       ) : (
         <NoTasksMessage>Nenhuma tarefa futura agendada.</NoTasksMessage>

@@ -2,7 +2,7 @@
 import React from 'react';
 import styled from 'styled-components';
 import { Card } from '../Common';
-import type { Task } from '../../types';
+import type { Calendar, Task } from '../../types'; // Adicionado Calendar
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
@@ -10,6 +10,7 @@ import { FaCheckCircle, FaQuestionCircle, FaTimesCircle } from 'react-icons/fa';
 interface DailyTasksProps {
   tasks: Task[];
   onTaskClik: (task: Task) => void;
+  calendars: Calendar[]; // Adicionada a propriedade calendars
 }
 
 const DailyTasksContainer = styled(Card)`
@@ -26,7 +27,6 @@ const DailyTasksContainer = styled(Card)`
   }
 `;
 
-// ATUALIZADO: Adiciona a prop $isCancelled para estilização condicional
 const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean }>`
   display: flex;
   align-items: center;
@@ -34,7 +34,6 @@ const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean }>`
   border-bottom: 1px dashed ${({ theme }) => theme.colors.border};
   cursor: pointer;
   
-  // NOVO: Aplica estilo para tarefas canceladas
   opacity: ${({ $isCancelled }) => ($isCancelled ? 0.6 : 1)};
   text-decoration: ${({ $isCancelled }) => ($isCancelled ? 'line-through' : 'none')};
 
@@ -51,11 +50,16 @@ const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean }>`
   }
   .task-details {
     flex-grow: 1;
+    min-width: 0; // Essencial para o text-overflow funcionar
+    h4, p { // Aplicar truncamento de texto
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
     h4 {
       font-size: 0.95rem;
       margin: 0;
       color: ${({ theme }) => theme.colors.textPrimary};
-      // NOVO: Flex para alinhar ícone e texto
       display: flex;
       align-items: center;
       gap: 6px;
@@ -63,8 +67,10 @@ const TaskItemWrapper = styled.div<{ $color?: string; $isCancelled?: boolean }>`
     p {
       font-size: 0.8rem;
       color: ${({ theme }) => theme.colors.textSecondary};
-      margin: 0;
-      padding-left: 16px; // Alinha com o texto do título
+      margin: 2px 0 0 0;
+    }
+    .client-name {
+      font-style: italic;
     }
   }
 `;
@@ -76,7 +82,6 @@ const NoTasksMessage = styled.p`
   padding: ${({ theme }) => theme.spacing.md} 0;
 `;
 
-// NOVO: Componente para renderizar o ícone de status
 const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     switch (status) {
         case 'confirmed': return <FaCheckCircle size={12} color="green" title="Confirmado" />;
@@ -86,17 +91,12 @@ const StatusIcon: React.FC<{ status?: string }> = ({ status }) => {
     }
 };
 
-const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
-  // A ordenação já está correta
+const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik, calendars }) => {
   const sortedTasks: Array<Task> = [...tasks].sort((a, b) => {
     const dateA = new Date(a.date);
     const dateB = new Date(b.date);
-
-    // Primeiro, ordena por data
     if (dateA < dateB) return -1;
     if (dateA > dateB) return 1;
-  
-    // Se as datas forem iguais, ordena por hora de início
     const startA = a.startTime || '';
     const startB = b.startTime || '';
     return startA.localeCompare(startB);
@@ -107,31 +107,35 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik }) => {
       <h3>Tarefas Do Dia</h3>
       {sortedTasks.length > 0 ? (
         <div className="task-list">
-          {sortedTasks.map(task => (
-            <TaskItemWrapper 
-              key={task.id} 
-              $color={task.color} 
-              // ATUALIZADO: Passa a prop para o styled component
-              $isCancelled={task.status === 'cancelled'}
-              onClick={(e) => {
-                e.stopPropagation();
-                e.preventDefault();
-                onTaskClik?.(task);
-              }}>
-              <div className="color-dot" />
-              <div className="task-details">
-                <h4>
-                  {/* NOVO: Renderiza o ícone de status */}
-                  <StatusIcon status={task.status} />
-                  {task.title}
-                </h4>
-                <p>
-                  {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
-                  {task.startTime && ` às ${task.startTime}`}
-                </p>
-              </div>
-            </TaskItemWrapper>
-          ))}
+          {sortedTasks.map(task => {
+            // Encontra o calendário correspondente para exibir o nome do cliente
+            const calendar = calendars.find(c => String(c.id) === String(task.calendar_id));
+            return (
+              <TaskItemWrapper 
+                key={task.id} 
+                $color={task.color} 
+                $isCancelled={task.status === 'cancelled'}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  onTaskClik?.(task);
+                }}>
+                <div className="color-dot" />
+                <div className="task-details">
+                  <h4>
+                    <StatusIcon status={task.status} />
+                    {task.title}
+                  </h4>
+                  {/* Exibe o nome do cliente (calendário) */}
+                  {calendar && <p className="client-name">{calendar.name}</p>}
+                  <p>
+                    {format(new Date(task.date), 'dd MMM', { locale: ptBR })}
+                    {task.startTime && ` às ${task.startTime}`}
+                  </p>
+                </div>
+              </TaskItemWrapper>
+            );
+          })}
         </div>
       ) : (
         <NoTasksMessage>Nenhuma tarefa para hoje.</NoTasksMessage>
