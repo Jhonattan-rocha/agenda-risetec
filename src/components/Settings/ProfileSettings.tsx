@@ -160,7 +160,7 @@ const ProfileManagement: React.FC = () => {
   useEffect(() => {
     fetchProfiles();
     fetchAllCalendars();
-  }, []); // Executa apenas uma vez ao montar
+  }, [fetchAllCalendars, fetchProfiles]); // Executa apenas uma vez ao montar
 
   // NOVO: Função para manipular a mudança de permissões (genéricas e específicas)
   const handlePermissionChange = (entityName: string, permissionType: keyof Omit<Permission, 'id' | 'entity_name'>, value: boolean) => {

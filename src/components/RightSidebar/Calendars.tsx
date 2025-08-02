@@ -71,15 +71,17 @@ const NoCalendarsMessage = styled.p`
 `;
 
 const Calendars: React.FC<CalendarsProps> = ({ calendars, onUpdate, onCalendarClick, onCreateCalendar }) => {
-  const sortedCalendars = calendars;
   const user = useSelector((state: { authreducer: AuthState }) => state.authreducer );
   const canCreateCalendars = usePermission('create', 'calendars', user.user.profile as Profile);
 
+  const sortedCalendars = [...calendars].sort((a, b) => a.name.localeCompare(b.name));
+
   return (
     <CalendarsContainer>
-      <div style={{ display: 'flex', flexDirection: 'row' }}><h3 style={{ width: '100%' }}>Calendarios</h3>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+        <h3 style={{ width: '100%' }}>Calendários</h3>
         {canCreateCalendars && (
-          <FaPlus size={24} cursor={'pointer'} onClick={onCreateCalendar} />
+          <FaPlus size={20} cursor={'pointer'} onClick={onCreateCalendar} />
         )}
       </div>
       {sortedCalendars.length > 0 ? (
@@ -94,20 +96,28 @@ const Calendars: React.FC<CalendarsProps> = ({ calendars, onUpdate, onCalendarCl
               <div className="calendar-details">
                 <h4>{calendar.name}</h4>
               </div>
-              <input type='checkbox' checked={calendar.visible} onClick={async (e) => {
-                e.stopPropagation();
-                await api.put(`/calendar/${calendar.id}`, {...calendar, visible: !calendar.visible }, {
-                  headers: {
-                    Authorization: `Bearer ${user.token}`
-                  }
-                });
-                onUpdate();
-              }}/>
+              <input 
+                type='checkbox' 
+                checked={calendar.visible} 
+                // --- CORREÇÃO APLICADA AQUI ---
+                // Adicionado onClick para parar a propagação do clique para o pai
+                onClick={(e) => e.stopPropagation()}
+                onChange={async (e) => {
+                  // O stopPropagation aqui também é uma boa prática, mas o do onClick é o crucial
+                  e.stopPropagation();
+                  await api.put(`/calendar/${calendar.id}`, {...calendar, visible: !calendar.visible }, {
+                    headers: {
+                      Authorization: `Bearer ${user.token}`
+                    }
+                  });
+                  onUpdate();
+                }}
+              />
             </CalendarItemWrapper>
           ))}
         </div>
       ) : (
-        <NoCalendarsMessage>Nenhum calendario criado.</NoCalendarsMessage>
+        <NoCalendarsMessage>Nenhum calendário criado.</NoCalendarsMessage>
       )}
     </CalendarsContainer>
   );
