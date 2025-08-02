@@ -26,7 +26,6 @@ const ErrorMessage = styled.span`
   margin-top: 4px;
 `;
 
-
 interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -85,10 +84,9 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const isEditing = !!task;
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const calendarIdForPermission = currentTask.calendar_id || task?.calendar_id;
-
+  
   // --- NOVO: Estado para os erros de validação ---
   const [errors, setErrors] = useState<Record<string, string>>({});
-
 
   const canCreateTask = usePermission('create', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
   const canUpdateTask = usePermission('update', `calendar_${calendarIdForPermission}`, user.user.profile as Profile);
@@ -100,14 +98,12 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   const [timeUnit, setTimeUnit] = useState<TimeUnit | ''>('');
 
   useEffect(() => {
-    // Popula o estado do formulário quando o modal abre
     const taskToLoad: Task = task as Task;
     if (taskToLoad?.notification_time_before != null) {
         const [value, unit] = convertFromMinutes(taskToLoad.notification_time_before);
         setTimeValue(String(value));
         setTimeUnit(unit);
     } else {
-        // Reseta se a tarefa não tiver um valor específico (para herdar)
         setTimeValue('');
         setTimeUnit('');
     }
@@ -120,7 +116,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
     });
     // Limpa os erros ao abrir o modal
     setErrors({});
-  }, [task, initialDate, isOpen]); // Roda sempre que o modal abrir
+  }, [task, initialDate, isOpen]);
 
   useEffect(() => {
       const handleKeyDown = (event: KeyboardEvent) => {
@@ -138,7 +134,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
-    // Limpa o erro do campo que está sendo alterado
     if (errors[name]) {
       setErrors(prev => ({...prev, [name]: ''}));
     }
@@ -148,7 +143,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
   
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-     // Limpa o erro do campo de data
     if (errors[name]) {
       setErrors(prev => ({...prev, [name]: ''}));
     }
@@ -169,34 +163,35 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
         };
     });
   };
-
-    // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
-    const validateFields = (): boolean => {
-      const newErrors: Record<string, string> = {};
-      if (!currentTask.title?.trim()) {
-        newErrors.title = 'O título é obrigatório.';
-      }
-      if (!currentTask.date) {
-        newErrors.date = 'A data de início é obrigatória.';
-      }
-      if (!currentTask.calendar_id) {
-        newErrors.calendar_id = 'O calendário é obrigatório.';
-      }
   
-      setErrors(newErrors);
-      // Retorna true se o objeto de erros estiver vazio
-      return Object.keys(newErrors).length === 0;
-    };
+  // --- NOVA FUNÇÃO DE VALIDAÇÃO ---
+  const validateFields = (): boolean => {
+    const newErrors: Record<string, string> = {};
+    if (!currentTask.title?.trim()) {
+      newErrors.title = 'O título é obrigatório.';
+    }
+    if (!currentTask.date) {
+      newErrors.date = 'A data de início é obrigatória.';
+    }
+    if (!currentTask.calendar_id) {
+      newErrors.calendar_id = 'O calendário é obrigatório.';
+    }
+    // Adição para consistência, embora o campo sempre tenha um valor.
+    if (typeof currentTask.isAllDay !== 'boolean') {
+      newErrors.isAllDay = 'O campo "Dia todo" é inválido.';
+    }
 
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSave = () => {
-    // Chama a validação antes de prosseguir
     if (!validateFields()) {
       return;
     }
-
     setIsLoading(true);
     const totalMinutes = timeValue && timeUnit ? convertToMinutes(Number(timeValue), timeUnit) : null;
+
     const user_ids = currentTask.users?.map(user => parseInt(user.id, 10)) || [];
     
     const taskPayload = {
@@ -284,7 +279,6 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
   const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
       const { name, value } = e.target;
-      // Limpa o erro do campo que está sendo alterado
       if (errors[name]) {
         setErrors(prev => ({...prev, [name]: ''}));
       }
@@ -448,7 +442,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ isOpen, onClose, task, initialDat
 
             <FormGroup>
               <Label htmlFor="calendar_id">Calendário</Label>
-              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleSelectChange} >
+              <Select id="calendar_id" name="calendar_id" value={currentTask.calendar_id || ''} onChange={handleSelectChange}>
                 <option value="" disabled>Selecione um calendário</option>
                 {calendars.map(calendar => (
                   <option key={calendar.id} value={calendar.id}>{calendar.name}</option>
