@@ -38,7 +38,6 @@ const MainContent = styled.div`
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  padding: ${({ theme }) => theme.spacing.lg};
   overflow: hidden;
 
   @media (max-width: 900px) {
