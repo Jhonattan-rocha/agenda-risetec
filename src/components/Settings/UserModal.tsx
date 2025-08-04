@@ -188,7 +188,7 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, user }) => {
     if (!isOpen) return null;
 
     return (
-        <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+        <ModalOverlay $isOpen={isOpen}>
             <ModalContent $isOpen={isOpen} onClick={(e) => e.stopPropagation()}>
                 <ModalHeader>
                     <h2>{isEditing ? 'Editar Usuário' : 'Novo Usuário'}</h2>

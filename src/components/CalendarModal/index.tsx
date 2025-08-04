@@ -308,7 +308,7 @@ const CalendarModal: React.FC<CalendarModalProps> = ({ isOpen, onClose, calendar
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+    <ModalOverlay $isOpen={isOpen}>
       <ModalContent $isOpen={isOpen} onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <h2>{isEditing ? 'Editar Calendário' : 'Novo Calendário'}</h2>

@@ -175,7 +175,7 @@ const RecurrenceModal: React.FC<RecurrenceModalProps> = ({ isOpen, onClose, onSa
     if (!isOpen) return null;
 
     return (
-        <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+        <ModalOverlay $isOpen={isOpen}>
             <ModalContent $isOpen={isOpen} onClick={e => e.stopPropagation()}>
                 <ModalHeader>
                     <h2>Configurações de repetição</h2>

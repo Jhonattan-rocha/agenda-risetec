@@ -102,7 +102,7 @@ const RecurrenceEditChoiceModal: React.FC<RecurrenceEditChoiceModalProps> = ({ i
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+    <ModalOverlay $isOpen={isOpen}>
       <ModalContent $isOpen={isOpen} onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <h3>{`Deseja ${actionText} o evento recorrente?`}</h3>

@@ -157,7 +157,7 @@ const NotificationModal: React.FC<NotificationModalProps> = ({ isOpen, onClose }
   if (!isOpen) return null;
 
   return (
-    <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+    <ModalOverlay $isOpen={isOpen}>
       <ModalContent onClick={e => e.stopPropagation()}>
         <ModalHeader>
           <h3>Notificações</h3>

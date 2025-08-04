@@ -164,7 +164,7 @@ const FilterModal: React.FC<FilterModalProps> = ({ isOpen, onClose, filters, onA
     // --- Renderização do Componente ---
 
     return (
-        <ModalOverlay $isOpen={isOpen} onClick={onClose}>
+        <ModalOverlay $isOpen={isOpen}>
             <ModalContent $isOpen={isOpen} onClick={e => e.stopPropagation()}>
                 <ModalHeader>
                     <h2>Filtros Avançados</h2>

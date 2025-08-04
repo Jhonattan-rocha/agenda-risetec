@@ -109,7 +109,7 @@ const DailyTasks: React.FC<DailyTasksProps> = ({ tasks, onTaskClik, calendars })
         <div className="task-list">
           {sortedTasks.map(task => {
             // Encontra o calendário correspondente para exibir o nome do cliente
-            const calendar = calendars.find(c => String(c.id) === String(task.calendar_id));
+            const calendar = calendars?.find(c => String(c.id) === String(task.calendar_id));
             return (
               <TaskItemWrapper 
                 key={task.id} 
