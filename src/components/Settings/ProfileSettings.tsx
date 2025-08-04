@@ -160,7 +160,7 @@ const ProfileManagement: React.FC = () => {
   useEffect(() => {
     fetchProfiles();
     fetchAllCalendars();
-  }, [fetchAllCalendars, fetchProfiles]); // Executa apenas uma vez ao montar
+  }, []); // Executa apenas uma vez ao montar
 
   // NOVO: Função para manipular a mudança de permissões (genéricas e específicas)
   const handlePermissionChange = (entityName: string, permissionType: keyof Omit<Permission, 'id' | 'entity_name'>, value: boolean) => {
@@ -303,7 +303,13 @@ const ProfileManagement: React.FC = () => {
                     </EditButton>
                   )}
                   {canDeleteProfiles && (
-                    <DeleteButton small outline danger onClick={(e) => { e.stopPropagation(); handleDeleteProfile(profile) }}>
+                    <DeleteButton small outline danger onClick={(e) => { 
+                      e.stopPropagation(); 
+                      setSelectedProfile(profile); 
+                      setTimeout(() => {
+                        handleDeleteProfile(profile);
+                      }, 200);
+                    }}>
                       { isLoading && selectedProfile && selectedProfile.id === profile.id ? (
                         <ActivityIndicator style={{ width: 20, height: 20 }}/>
                       ) : (
