@@ -25,8 +25,8 @@ const TooltipContainer = styled.div<{ top: number; left: number }>`
   box-shadow: ${({ theme }) => theme.boxShadow};
   padding: ${({ theme }) => theme.spacing.md};
   z-index: 1002;
-  width: 300px;
-  max-height: 300px;
+  width: 400px;
+  max-height: 400px;
   pointer-events: none; // Impede que o tooltip interfira com outros eventos do mouse
 `;
 
@@ -92,7 +92,13 @@ const EventTooltip: React.FC<EventTooltipProps> = ({ task, position, ref }) => {
             ? 'Dia todo'
             : `${task.startTime || ''} - ${task.endTime || ''}`}
         </p>
-        {task.description && <p>{task.description}</p>}
+        {task.description && (
+          <>
+            <p>------------------------------------------------------------------</p>
+            <p>Descrição: {task.description}</p>
+            <p>------------------------------------------------------------------</p>
+          </>
+        )}
         <p>Participantes</p>
         <ol style={{ padding: 15 }}>
           {task.users?.map(usr => {
