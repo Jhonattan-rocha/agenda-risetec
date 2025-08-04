@@ -160,6 +160,7 @@ const ProfileManagement: React.FC = () => {
   useEffect(() => {
     fetchProfiles();
     fetchAllCalendars();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Executa apenas uma vez ao montar
 
   // NOVO: Função para manipular a mudança de permissões (genéricas e específicas)
